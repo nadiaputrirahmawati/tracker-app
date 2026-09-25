@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum BudgetType {
+  EXPENSE
+  SAVING
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+model User {
+  id           BigInt        @id @default(autoincrement())
+  name         String        @db.VarChar(100)
+  email        String        @unique @db.VarChar(150)
+  password     String        @db.VarChar(255)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  wallets      Wallet[]
+  budgets      Budget[]
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id             BigInt        @id @default(autoincrement())
+  userId         BigInt        @map("user_id")
+  name           String        @db.VarChar(100)
+  initialBalance Decimal       @default(0) @map("initial_balance") @db.Decimal(15, 2)
+  currentBalance Decimal       @default(0) @map("current_balance") @db.Decimal(15, 2)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+
+  @@map("wallets")
+}
+
+model Budget {
+  id              BigInt        @id @default(autoincrement())
+  userId          BigInt        @map("user_id")
+  period          String        @db.VarChar(7)
+  name            String        @db.VarChar(100)
+  icon            String?       @db.VarChar(50)
+  type            BudgetType    @default(EXPENSE)
+  allocatedAmount Decimal       @map("allocated_amount") @db.Decimal(15, 2)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+
+  @@index([userId, period], name: "idx_user_period")
+  @@map("budgets")
+}
+
+model Transaction {
+  id              BigInt          @id @default(autoincrement())
+  userId          BigInt          @map("user_id")
+  walletId        BigInt          @map("wallet_id")
+  budgetId        BigInt?         @map("budget_id")
+  type            TransactionType
+  amount          Decimal         @db.Decimal(15, 2)
+  transactionDate DateTime        @map("transaction_date") @db.Date
+  notes           String?         @db.Text
+  imageUrl        String?         @map("image_url") @db.VarChar(255)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet          Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  budget          Budget?         @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+
+  @@index([userId, transactionDate], name: "idx_user_txdate")
+  @@map("transactions")
+}
