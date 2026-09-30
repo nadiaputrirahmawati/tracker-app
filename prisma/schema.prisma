@@ -90,3 +90,10 @@ model Transaction {
   @@index([userId, transactionDate], name: "idx_user_txdate")
   @@map("transactions")
 }
+
+model verificationToken {
+  identifier String   @id
+  token      String
+  expires    DateTime
+  createdAt  DateTime @default(now())
+}

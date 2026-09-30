@@ -1,35 +1,31 @@
+
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 import { prisma } from "@/src/lib/prisma";
-import { z } from "zod";
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       async authorize(credentials) {
-        const validated = loginSchema.safeParse(credentials);
-        if (!validated.success) return null;
+        const { email, password } = credentials as {
+          email?: string;
+          password?: string;
+        };
+
+        if (!email || !password) return null;
 
         const user = await prisma.user.findUnique({
-          where: { email: validated.data.email },
+          where: { email: email.toLowerCase().trim() },
         });
 
         if (!user || !user.password) return null;
 
-        const passwordMatch = await bcrypt.compare(
-          validated.data.password,
-          user.password
-        );
+        const passwordsMatch = await bcrypt.compare(password, user.password);
+        if (!passwordsMatch) return null;
 
-        if (!passwordMatch) return null;
-
-        // BigInt dikonversi ke string agar aman di JSON session
         return {
           id: user.id.toString(),
           name: user.name,
@@ -38,20 +34,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) token.id = user.id;
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/login",
-  },
 });

@@ -2,13 +2,7 @@
 
 import { prisma } from "@/src/lib/prisma";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
-
-const registerSchema = z.object({
-  name: z.string().min(2, "Nama minimal 2 karakter"),
-  email: z.string().email("Format email tidak valid"),
-  password: z.string().min(6, "Password minimal 6 karakter"),
-});
+import {signUpSchema} from "@/src/schemas/auth"
 
 export async function registerUser(formData: FormData) {
   const rawData = {
@@ -17,7 +11,7 @@ export async function registerUser(formData: FormData) {
     password: formData.get("password"),
   };
 
-  const parsed = registerSchema.safeParse(rawData);
+  const parsed = signUpSchema.safeParse(rawData);
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
@@ -50,3 +44,4 @@ export async function registerUser(formData: FormData) {
 
   return { success: true };
 }
+

@@ -1,4 +1,4 @@
-import { BottomNav } from "@/src/components/bottom-nav";
+import { BottomNav } from "@/src/components/navbar/bottom";
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 
