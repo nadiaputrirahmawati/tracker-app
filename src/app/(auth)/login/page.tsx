@@ -56,8 +56,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center p-0 sm:p-4`}>
-      <div className="w-full max-w-md h-[100dvh] sm:h-[844px] bg-gradient-to-b from-[#8FA866] via-[#7B9651] to-[#688241] text-white flex flex-col justify-between relative overflow-hidden shadow-2xl sm:rounded-[44px]">
+    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center p-6`}>
+      <div className="w-full max-w-md  bg-gradient-to-b from-[#8FA866] via-[#7B9651] to-[#688241] text-white flex flex-col justify-between  overflow-hidden shadow-2xl rounded-[44px]">
 
         {/* Ornamen Garis Gelombang Geometris Abstrak (Bukan Bunga/Daun) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
