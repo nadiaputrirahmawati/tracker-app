@@ -64,8 +64,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center lg:p-6 p-0`}>
-      <div className="w-full max-w-md  bg-gradient-to-b from-[#8FA866] via-[#7B9651] to-[#688241] text-white flex flex-col justify-between  overflow-hidden shadow-2xl lg:rounded-[44px] rounded-none
+    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center lg:p-6 p-2`}>
+      <div className="w-full max-w-md  bg-gradient-to-b from-[#8FA866] via-[#7B9651] to-[#688241] text-white flex flex-col justify-between  overflow-hidden shadow-2xl lg:rounded-[44px] rounded-[40px]
       ">
         {/* Ornamen Glow */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
