@@ -9,7 +9,7 @@ export default async function BudgetsPage() {
   const currentPeriod = getCurrentPeriod();
   const budgets = await getBudgetsByPeriod(currentPeriod);
 
-  const totalAllocated = budgets.reduce((sum, b) => sum + b.allocatedAmount, 0);
+  const totalAllocated = budgets.reduce((sum: number, b: any) => sum + Number(b.allocatedAmount), 0);
   const totalUsed = budgets.reduce((sum, b) => sum + b.usedAmount, 0);
 
   return (
@@ -62,7 +62,7 @@ export default async function BudgetsPage() {
               <p className="text-xs">Belum ada amplop pos anggaran di bulan ini.</p>
             </div>
           ) : (
-            budgets.map((b) => (
+            budgets.map((b: any) => (
               <div
                 key={b.id}
                 className="bg-white border-2 border-teal-950 p-4 rounded-2xl shadow-[3px_3px_0px_#042f2e] space-y-3"

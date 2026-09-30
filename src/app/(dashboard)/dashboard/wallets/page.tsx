@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default async function WalletsPage() {
   const wallets = await getWallets();
-  const totalBalance = wallets.reduce((sum, w) => sum + w.currentBalance, 0);
+  const totalBalance = wallets.reduce((sum:number, w:any) => sum + Number(w.currentBalance), 0);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -38,7 +38,7 @@ export default async function WalletsPage() {
 
         {/* List Dompet */}
         <div className="space-y-3">
-          {wallets.map((w) => (
+          {wallets.map((w: any) => (
             <div
               key={w.id}
               className="bg-white border-2 border-teal-950 p-4 rounded-2xl shadow-[3px_3px_0px_#042f2e] flex items-center justify-between"

@@ -36,7 +36,7 @@ export default async function TransactionsHistoryPage() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-sm overflow-hidden">
-            {transactions.map((tx) => {
+            {transactions.map((tx: any) => {
               const isIncome = tx.type === "INCOME";
               return (
                 <div key={tx.id.toString()} className="p-3.5 flex items-center justify-between">
