@@ -145,8 +145,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center p-6`}>
-      <div className="w-full max-w-md  bg-gradient-to-b from-[#8FA866] via-[#7B9651] to-[#688241] text-white flex flex-col justify-between  overflow-hidden shadow-2xl rounded-[44px]">
+    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center lg:p-6 p-0`}>
+      <div className="w-full max-w-md   text-white flex flex-col justify-between  overflow-hidden shadow-2xl lg:rounded-[44px] rounded-none
+      ">
 
         {/* 1. Bar Navigasi Atas & Tombol Kembali */}
         <div className="pt-8 px-6 flex items-center justify-between z-10 shrink-0">

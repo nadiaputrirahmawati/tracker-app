@@ -56,16 +56,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center p-6`}>
-      <div className="w-full max-w-md  bg-gradient-to-b from-[#8FA866] via-[#7B9651] to-[#688241] text-white flex flex-col justify-between  overflow-hidden shadow-2xl rounded-[44px]">
+    <div className={`${jakarta.className} min-h-screen bg-white flex justify-center items-center lg:p-6 p-0`}>
+      <div className="w-full max-w-md  bg-gradient-to-b from-[#8FA866] via-[#7B9651] to-[#688241] text-white flex flex-col justify-between  overflow-hidden shadow-2xl lg:rounded-[44px] rounded-none
+      ">
 
         {/* Ornamen Garis Gelombang Geometris Abstrak (Bukan Bunga/Daun) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* Efek Ambient Glow */}
           <div className="absolute -top-16 -left-16 w-64 h-64 bg-white/15 rounded-full blur-3xl" />
           <div className="absolute top-44 -right-16 w-56 h-56 bg-emerald-200/15 rounded-full blur-2xl" />
-
-
         </div>
 
         {/* 1. Header & Logo Atas */}
@@ -89,9 +88,9 @@ export default function LoginPage() {
         </div>
 
         {/* 2. Kartu Melayang Bawah (Bottom Sheet Card) */}
-        <div className="relative z-10 flex-1 flex flex-col mt-8">
+        <div className="relative z-10 flex-1 flex flex-col lg:mt-8 mt-4">
           {/* Notch Handle Bar */}
-          <div className="absolute justify-center ml-[12.5rem] mt-3">
+          <div className="absolute justify-center lg:ml-[12.5rem] ml-[10.2rem]  mt-3">
             <div className="w-16 h-1.5 bg-gray-500 rounded-full" />
           </div>
 
