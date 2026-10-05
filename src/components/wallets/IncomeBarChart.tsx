@@ -63,7 +63,7 @@ export function AnnualFinanceChart({
       {/* Header & Filter Tahun */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h3 className="text-base font-extrabold text-[#062828] tracking-tight">
+          <h3 className="text-lg font-extrabold text-[#062828] tracking-tight">
             Overview
           </h3>
           <p className="text-[11px] font-semibold text-slate-400">

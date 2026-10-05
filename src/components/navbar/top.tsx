@@ -47,7 +47,7 @@ export function TopNav() {
             />
           </div>
           <span
-            className={`${fredoka.className} text-xl font-bold tracking-wide text-[#FEF08A] drop-shadow-[0_1.5px_0_#021818]`}
+            className={`${fredoka.className} text-xl font-bold tracking-wide text-[#FEF08A] drop-shadow-[0_1.5px_0_#fffff]`}
           >
             Spoket
           </span>

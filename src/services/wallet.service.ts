@@ -8,10 +8,12 @@ export interface MonthlyFinanceItem {
 }
 
 export async function getWalletsDashboardData(userId: bigint, targetYear: number) {
-  const [wallets, aggregateTotal, monthlyFlowRaw, availableYearsRaw] = await Promise.all([
+  const [wallets, aggregateTotal, walletTotal, monthlyFlowRaw, availableYearsRaw] = await Promise.all([
     // 1. Ambil seluruh list dompet
     prisma.wallet.findMany({
-      where: { userId },
+      where: { userId, NOT: {
+        name: { equals: "Kantong Utama", mode: "insensitive" },
+      },},
       select: {
         id: true,
         name: true,
@@ -22,7 +24,14 @@ export async function getWalletsDashboardData(userId: bigint, targetYear: number
 
     // 2. Hitung TOTAL SALDO langsung dari PostgreSQL
     prisma.wallet.aggregate({
-      where: { userId },
+      where: { userId, name: { equals: "Kantong Utama", mode: "insensitive" } },
+      _sum: {
+        currentBalance: true,
+      },
+    }),
+
+    prisma.wallet.aggregate({
+      where: { userId},
       _sum: {
         currentBalance: true,
       },
@@ -65,22 +74,25 @@ export async function getWalletsDashboardData(userId: bigint, targetYear: number
 
   const totalBalance = Number(aggregateTotal._sum.currentBalance || 0);
 
-  const chartData: MonthlyFinanceItem[] = monthlyFlowRaw.map((d) => ({
+  
+  const chartData: MonthlyFinanceItem[] = monthlyFlowRaw.map((d: any) => ({
     monthNum: Number(d.month_num),
     monthName: d.month_name,
     income: Number(d.total_income),
     expense: Number(d.total_expense),
   }));
-
+  
   // Ekstrak daftar tahun, fallback ke [targetYear] jika database transaksi masih kosong
   const extractedYears = availableYearsRaw.map((y) => Number(y.year));
   const availableYears =
-    extractedYears.length > 0
-      ? extractedYears
-      : [targetYear];
-
+  extractedYears.length > 0
+  ? extractedYears
+  : [targetYear];
+  
+  const walletTotalIncome = Number(walletTotal._sum.currentBalance) || 0;
   return {
     totalBalance,
+    walletTotalIncome,
     wallets: wallets.map((w) => ({
       id: w.id.toString(),
       name: w.name,

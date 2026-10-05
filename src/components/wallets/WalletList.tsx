@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
+
 import {
   MoreVertical,
   Wallet as WalletIcon,
@@ -10,19 +12,21 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
-import { formatRupiah } from "@/src/lib/utils";
 import { WalletActionModal, WalletItem } from "@/src/components/wallets/WalletActionModal";
 import { deleteWalletWithBalanceTransfer } from "@/src/actions/wallet";
+import Link from "next/link";
+import { formatRupiah } from "@/src/lib/utils";
 
 interface WalletListProps {
   initialWallets: WalletItem[];
   userId?: string;
+  walletTotalIncome: number;
 }
 
-export function WalletList({ initialWallets, userId = "1" }: WalletListProps) {
+export function WalletList({ initialWallets, userId = "1", walletTotalIncome }: WalletListProps) {
   const [wallets, setWallets] = useState<WalletItem[]>(initialWallets);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  
+
   // State untuk modal edit
   const [selectedWalletForEdit, setSelectedWalletForEdit] = useState<WalletItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -33,6 +37,7 @@ export function WalletList({ initialWallets, userId = "1" }: WalletListProps) {
   const [mounted, setMounted] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     setMounted(true);
@@ -57,6 +62,8 @@ export function WalletList({ initialWallets, userId = "1" }: WalletListProps) {
     setSelectedWalletForEdit(wallet);
     setIsEditModalOpen(true);
   };
+
+
 
   const handleOpenDelete = (wallet: WalletItem) => {
     setActiveMenuId(null);
@@ -84,43 +91,78 @@ export function WalletList({ initialWallets, userId = "1" }: WalletListProps) {
 
   return (
     <div className="space-y-3">
+
+      <div className="flex justify-between bg-amber-100/80 px-3 rounded-lg">
+        <div className="flex space-x-1">
+          <div>
+            <Image
+              src="/img/atm.svg"
+              alt="wallet"
+              width={60}
+              height={60}
+            />
+          </div>
+          <div className="p-2">
+            <h4 className="text-black font-bold">Total Aset Saya</h4>
+            <h4 className="text-black font-medium"> {formatRupiah(walletTotalIncome)}</h4>
+          </div>
+        </div>
+
+        <div className="pt-3">
+          <Link
+            href="/dashboard/wallets/create"
+            prefetch={true}
+            className="border-2 border-teal-950 text-white bg-[#062828] px-3 py-2.5 rounded-md font-black text-xs shadow-[2px_2px_0px_#042f2e] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center gap-1.5 transition"
+          >
+            <WalletIcon size={15} />
+
+            <span>Alokasi Saldo</span>
+          </Link>
+        </div>
+
+      </div>
+
       <div className="flex items-center justify-between px-1">
-        <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+        <span className="text-lg font-black  tracking-wider text-slate-800">
           Daftar Kantong Saldo ({wallets.length})
         </span>
       </div>
 
       {/* Render List Dompet */}
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {wallets.map((wallet) => (
           <div
             key={wallet.id}
-            className="relative flex items-center justify-between p-3.5 bg-white border border-slate-100 rounded-2xl shadow-xs transition"
+            className="relative flex items-center justify-between  bg-amber-100 border border-slate-100/80 shadow-md rounded-lg  hover:shadow transition"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#062828]">
-                <WalletIcon size={18} />
+            {/* Sisi Kiri: Ikon Kapsul Gelap + Teks Judul & Saldo */}
+            <div className="flex items-center gap-3.5">
+              {/* Kotak Ikon Vertikal Rounded seperti Gambar */}
+              <div className="w-15 h-15 rounded-lg flex bg-[#042f2e] shadow-xl  items-center justify-center text-white  shrink-0">
+                <WalletIcon size={20} className="stroke-[2.2]" />
               </div>
-              <div>
-                <h4 className="text-xs font-black text-[#062828]">{wallet.name}</h4>
-                <span className="text-[10px] font-semibold text-emerald-600">Dompet Aktif</span>
+
+              {/* Teks Dompet & Nominal */}
+              <div className="flex flex-col justify-center space-y-0.5">
+                <h4 className="text-md font-black text-slate-800 tracking-tight">
+                  {wallet.name}
+                </h4>
+                <span className="text-md   font-bold text-slate-400">
+                  {formatRupiah(wallet.balance)}
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 relative">
-              <span className="text-xs font-black text-[#062828]">
-                {formatRupiah(wallet.balance)}
-              </span>
-
-              {/* Tombol Titik Tiga */}
+            {/* Sisi Kanan: Titik Tiga & Dropdown Menu */}
+            <div className="relative pr-1">
               <button
                 type="button"
                 onClick={() =>
                   setActiveMenuId(activeMenuId === wallet.id ? null : wallet.id)
                 }
-                className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition"
+                className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-700 transition"
               >
-                <MoreVertical size={16} />
+                <MoreVertical size={18} className="stroke-[2.5]" />
               </button>
 
               {/* Popup Aksi Dropdown Melayang */}
@@ -177,7 +219,7 @@ export function WalletList({ initialWallets, userId = "1" }: WalletListProps) {
         createPortal(
           <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
             <div className="w-full max-w-sm bg-white rounded-[32px] p-6 shadow-2xl relative z-[1000] animate-in zoom-in-95 duration-200">
-              
+
               <div className="flex items-center justify-between pb-2">
                 <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
                   <AlertTriangle size={20} />

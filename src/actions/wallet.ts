@@ -8,6 +8,7 @@ interface SplitWalletPayload {
   amount: number;
 }
 
+
 interface BudgetAllocPayload {
   name: string;
   amount: number;
@@ -16,116 +17,129 @@ interface BudgetAllocPayload {
 
 interface IncomePayload {
   userId: string;
-  mainWalletName: string;
+  mainWalletName?: string;
   totalIncome: number;
   notes?: string;
   budgets?: BudgetAllocPayload[];
   walletSplits?: SplitWalletPayload[];
 }
 
-// 1. Eksekusi Gajian & Pecah Dompet Otomatis (Cepat & Mutasi Lengkap)
+interface CreateWalletPayload {
+  userId: string;
+  name: string;
+  initialAllocation: number;
+}
+
 export async function processIncomeWorkflow(payload: IncomePayload) {
   const userIdBig = BigInt(payload.userId);
-  const mainName = payload.mainWalletName.trim() || "Kas Tunai";
+  const mainWalletName = (payload.mainWalletName || "Kantong Utama").trim();
+  const totalIncome = Number(payload.totalIncome) || 0;
+
+  if (totalIncome <= 0) {
+    return { error: "Nominal gaji harus lebih besar dari Rp 0" };
+  }
+
+  // Filter split yang valid (punya nama & nominal > 0)
+  const validSplits = (payload.walletSplits || []).filter(
+    (s) => s.name && s.name.trim() !== "" && Number(s.amount) > 0
+  );
+
+  // Hitung total uang yang di-split
+  const totalSplitAmount = validSplits.reduce((acc, curr) => acc + Number(curr.amount), 0);
+
+  // SISA BERSIH YANG HARUS MASUK KE KANTONG UTAMA
+  const remainingForMainWallet = totalIncome - totalSplitAmount;
+
+  if (totalSplitAmount > totalIncome) {
+    return { error: "Total pembagian dompet melebihi nominal gaji!" };
+  }
 
   try {
     await prisma.$transaction(async (tx) => {
-      // 1. Ambil atau Buat Dompet Utama
+      // 1. Cari / Buat Dompet Utama
       let mainWallet = await tx.wallet.findFirst({
-        where: { userId: userIdBig, name: { equals: mainName, mode: "insensitive" } },
+        where: { userId: userIdBig, name: { equals: mainWalletName, mode: "insensitive" } },
       });
 
       if (!mainWallet) {
         mainWallet = await tx.wallet.create({
           data: {
             userId: userIdBig,
-            name: mainName,
+            name: mainWalletName,
             initialBalance: 0,
             currentBalance: 0,
           },
         });
       }
 
-      // 2. Tambah Saldo Dompet Utama & Catat Transaksi Masuk
-      await tx.wallet.update({
-        where: { id: mainWallet.id },
-        data: { currentBalance: { increment: payload.totalIncome } },
-      });
+      // 2. HANYA MASUKKAN SISA (Rp 90.000) KE KANTONG UTAMA
+      if (remainingForMainWallet > 0) {
+        await tx.wallet.update({
+          where: { id: mainWallet.id },
+          data: { currentBalance: { increment: remainingForMainWallet } },
+        });
 
-      await tx.transaction.create({
-        data: {
-          userId: userIdBig,
-          walletId: mainWallet.id,
-          type: "INCOME",
-          amount: payload.totalIncome,
-          transactionDate: new Date(),
-          notes: payload.notes || "Gajian / Pemasukan Utama",
-        },
-      });
+        await tx.transaction.create({
+          data: {
+            userId: userIdBig,
+            walletId: mainWallet.id,
+            type: "INCOME",
+            amount: remainingForMainWallet, // HARUS SISA INI!
+            transactionDate: new Date(),
+            notes: payload.notes || "Sisa Alokasi Gaji",
+          },
+        });
+      }
 
-      // 3. Pecah Saldo ke Dompet Target (Catat Mutasi di KEDUA Dompet)
-      if (payload.walletSplits && payload.walletSplits.length > 0) {
-        for (const split of payload.walletSplits) {
-          const splitName = split.name.trim();
-          if (!splitName || split.amount <= 0) continue;
-          if (splitName.toLowerCase() === mainWallet.name.toLowerCase()) continue;
+      // 3. Masukkan uang yang di-split ke masing-masing dompet target
+      // Sebar ke Dompet Tujuan
+      // 4. Sebar ke Dompet Tujuan (Cukup 1 Catatan Transaksi per Split)
+      for (const split of validSplits) {
+        const splitName = split.name.trim();
+        const splitAmount = Number(split.amount);
 
-          let targetWallet = await tx.wallet.findFirst({
-            where: { userId: userIdBig, name: { equals: splitName, mode: "insensitive" } },
-          });
+        // Jangan split ke dompet utama sendiri
+        if (splitName.toLowerCase() === mainWallet.name.toLowerCase()) continue;
 
-          if (!targetWallet) {
-            targetWallet = await tx.wallet.create({
-              data: {
-                userId: userIdBig,
-                name: splitName,
-                initialBalance: 0,
-                currentBalance: 0,
-              },
-            });
-          }
+        let targetWallet = await tx.wallet.findFirst({
+          where: { userId: userIdBig, name: { equals: splitName, mode: "insensitive" } },
+        });
 
-          // Potong Dompet Utama & Tambah ke Target
-          await tx.wallet.update({
-            where: { id: mainWallet.id },
-            data: { currentBalance: { decrement: split.amount } },
-          });
-
-          await tx.wallet.update({
-            where: { id: targetWallet.id },
-            data: { currentBalance: { increment: split.amount } },
-          });
-
-          // Catat Mutasi Pengeluaran Transfer di Dompet Utama
-          await tx.transaction.create({
+        if (!targetWallet) {
+          targetWallet = await tx.wallet.create({
             data: {
               userId: userIdBig,
-              walletId: mainWallet.id,
-              type: "TRANSFER",
-              amount: split.amount,
-              transactionDate: new Date(),
-              notes: `Alokasi gaji ke ${targetWallet.name}`,
-            },
-          });
-
-          // Catat Mutasi Penerimaan di Dompet Target
-          await tx.transaction.create({
-            data: {
-              userId: userIdBig,
-              walletId: targetWallet.id,
-              type: "INCOME",
-              amount: split.amount,
-              transactionDate: new Date(),
-              notes: `Terima alokasi gaji dari ${mainWallet.name}`,
+              name: splitName,
+              initialBalance: 0,
+              currentBalance: 0,
             },
           });
         }
+
+        // Tambah saldo ke dompet tujuan
+        await tx.wallet.update({
+          where: { id: targetWallet.id },
+          data: { currentBalance: { increment: splitAmount } },
+        });
+
+        // CATAT HANYA 1 TRANSAKSI TRANSFER
+        await tx.transaction.create({
+          data: {
+            userId: userIdBig,
+            walletId: targetWallet.id, // atau mainWallet.id sesuai kebutuhan laporan Anda
+            type: "TRANSFER",
+            amount: splitAmount,
+            transactionDate: new Date(),
+            notes: `Alokasi dari ${mainWallet.name} ke ${targetWallet.name}`,
+          },
+        });
       }
 
-      // 4. Simpan Pos Anggaran
+      // 4. Pos Anggaran Budget (Jika ada)
       if (payload.budgets && payload.budgets.length > 0) {
         for (const b of payload.budgets) {
-          if (b.amount <= 0) continue;
+          const bAmount = Number(b.amount);
+          if (bAmount <= 0) continue;
 
           const exist = await tx.budget.findFirst({
             where: { userId: userIdBig, period: b.period, name: b.name },
@@ -134,7 +148,7 @@ export async function processIncomeWorkflow(payload: IncomePayload) {
           if (exist) {
             await tx.budget.update({
               where: { id: exist.id },
-              data: { allocatedAmount: { increment: b.amount } },
+              data: { allocatedAmount: { increment: bAmount } },
             });
           } else {
             await tx.budget.create({
@@ -142,8 +156,8 @@ export async function processIncomeWorkflow(payload: IncomePayload) {
                 userId: userIdBig,
                 name: b.name,
                 period: b.period,
-                allocatedAmount: b.amount,
-                type: "EXPENSE",
+                allocatedAmount: bAmount,
+                type: b.name.toLowerCase().includes("tabung") ? "SAVING" : "EXPENSE",
               },
             });
           }
@@ -153,12 +167,11 @@ export async function processIncomeWorkflow(payload: IncomePayload) {
 
     revalidatePath("/dashboard/wallets");
     return { success: true };
-  } catch (err) {
-    console.error("Gagal simpan:", err);
-    return { error: "Gagal memproses alokasi dana ke dompet." };
+  } catch (err: any) {
+    console.error("ERROR DB:", err);
+    return { error: err?.message || "Gagal memproses ke database." };
   }
 }
-
 // 2. Action Update Dompet (Nama & Koreksi Nominal Saldo dari Modal)
 export async function updateWalletDetails(
   walletId: string,
@@ -347,5 +360,86 @@ export async function deleteWalletWithBalanceTransfer(
     return { success: true };
   } catch (error: any) {
     return { error: error?.message || "Gagal menghapus dompet." };
+  }
+}
+
+
+export async function createWalletFromMainIncome(payload: CreateWalletPayload) {
+  const userIdBig = BigInt(payload.userId);
+  const walletName = payload.name.trim();
+  const allocation = Math.round(payload.initialAllocation);
+
+  if (!walletName) {
+    return { error: "Nama kantong/dompet wajib diisi." };
+  }
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Ambil data Kantong Utama
+      const mainWallet = await tx.wallet.findFirst({
+        where: {
+          userId: userIdBig,
+          name: { equals: "Kantong Utama", mode: "insensitive" },
+        },
+      });
+
+      if (!mainWallet) {
+        throw new Error("Kantong Utama belum ditemukan. Silakan tambahkan pemasukan terlebih dahulu.");
+      }
+
+      // Validasi kecukupan saldo Kantong Utama jika ada alokasi awal
+      if (allocation > 0 && Number(mainWallet.currentBalance) < allocation) {
+        throw new Error("Saldo Kantong Utama tidak mencukupi untuk alokasi ini.");
+      }
+
+      // Cek apakah nama dompet sudah ada
+      const existingWallet = await tx.wallet.findFirst({
+        where: {
+          userId: userIdBig,
+          name: { equals: walletName, mode: "insensitive" },
+        },
+      });
+
+      if (existingWallet) {
+        throw new Error(`Kantong dengan nama "${walletName}" sudah terdaftar.`);
+      }
+
+      // 2. Buat dompet baru
+      const newWallet = await tx.wallet.create({
+        data: {
+          userId: userIdBig,
+          name: walletName,
+          initialBalance: allocation,
+          currentBalance: allocation,
+        },
+      });
+
+      // 3. Jika ada alokasi awal, potong Kantong Utama & catat 1 baris TRANSFER
+      if (allocation > 0) {
+        await tx.wallet.update({
+          where: { id: mainWallet.id },
+          data: { currentBalance: { decrement: allocation } },
+        });
+
+        await tx.transaction.create({
+          data: {
+            userId: userIdBig,
+            walletId: newWallet.id,
+            type: "TRANSFER",
+            amount: allocation,
+            transactionDate: new Date(),
+            notes: `Alokasi saldo awal dari ${mainWallet.name}`,
+          },
+        });
+      }
+
+      return newWallet;
+    });
+
+    revalidatePath("/dashboard/wallets");
+    return { success: true, walletId: result.id.toString() };
+  } catch (err: any) {
+    console.error("Gagal membuat kantong:", err);
+    return { error: err?.message || "Gagal membuat kantong baru." };
   }
 }

@@ -13,7 +13,7 @@ export function WalletCard({ totalBalance }: WalletCardProps) {
       {/* Teks & Angka Saldo di Tengah */}
       <div className="text-center space-y-1 ">
         <span className="text-xl font-bold text-white/70 block">
-          Saldo Total
+          Saldo Kantong Utama
         </span>
         <h2 className="text-3xl font-black tracking-tight text-white">
           Rp {toRupiah(totalBalance)}
