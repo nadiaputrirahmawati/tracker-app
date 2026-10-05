@@ -12,7 +12,8 @@ generator client {
 }
 
 enum BudgetType {
-  EXPENSE
+  EXPENSE_DAILY
+  EXPENSE   
   SAVING
 }
 

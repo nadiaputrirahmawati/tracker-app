@@ -32,13 +32,13 @@ export async function registerUser(formData: FormData) {
       name: parsed.data.name,
       email: parsed.data.email,
       password: hashedPassword,
-      wallets: {
-        create: {
-          name: "Kas Tunai",
-          initialBalance: 0,
-          currentBalance: 0,
-        },
-      },
+      // wallets: {
+      //   create: {
+      //     name: "Kas Tunai",
+      //     initialBalance: 0,
+      //     currentBalance: 0,
+      //   },
+      // },
     },
   });
 

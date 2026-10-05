@@ -14,6 +14,14 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+// import { Metadata } from 'next';
+
+// // define metadata untuk halaman sign-in
+// export const metadata: Metadata = {
+//   title: 'Sign In - Spoket',
+//   description: 'Sign in to Spoket',
+// };
+
 export default function LoginPage() {
   const router = useRouter();
   const { status } = useSession();

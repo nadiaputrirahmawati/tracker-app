@@ -192,14 +192,6 @@ export default async function DashboardPage() {
           </span>
         </div>
       </section>
-
-
-
-      {/* Floating Action Modal: Input Cepat 5 Detik */}
-      <QuickExpenseModal
-        defaultWalletId={defaultWalletId}
-        budgets={data.budgets.map((b) => ({ id: b.id, name: b.name }))}
-      />
     </div>
   );
 }
