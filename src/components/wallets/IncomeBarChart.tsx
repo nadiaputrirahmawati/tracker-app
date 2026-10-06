@@ -59,14 +59,14 @@ export function AnnualFinanceChart({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-spoket-yellow/60 shadow-md rounded-2xl p-4">
       {/* Header & Filter Tahun */}
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="text-lg font-extrabold text-[#062828] tracking-tight">
             Overview
           </h3>
-          <p className="text-[11px] font-semibold text-slate-400">
+          <p className="text-[11px] font-semibold text-spoket-dark">
             Januari - Desember {selectedYear}
           </p>
         </div>
@@ -75,7 +75,7 @@ export function AnnualFinanceChart({
         <select
           value={selectedYear}
           onChange={(e) => handleYearChange(e.target.value)}
-          className="bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 text-xs font-bold text-[#062828] focus:outline-none cursor-pointer"
+          className="bg-spoket-cream border-2 border-spoket-yellow rounded-xl px-3 py-1.5 text-xs font-bold text-[#062828] focus:outline-none cursor-pointer"
         >
           {availableYears.map((yr) => (
             <option key={yr} value={yr}>
@@ -107,7 +107,7 @@ export function AnnualFinanceChart({
                 x={paddingLeft - 6}
                 y={getY(val) + 3}
                 textAnchor="end"
-                className="text-[11px] font-bold fill-slate-400"
+                className="text-[11px] font-bold fill-spoket-darker/80"
               >
                 {formatRupiahShort(val)}
               </text>
@@ -136,7 +136,7 @@ export function AnnualFinanceChart({
                     width={barWidth}
                     height={hIncome}
                     rx={barWidth / 2}
-                    className="fill-[#062828]"
+                    className="fill-spoket-dark"
                   />
                 )}
 
@@ -148,7 +148,7 @@ export function AnnualFinanceChart({
                     width={barWidth}
                     height={hExpense}
                     rx={barWidth / 2}
-                    className="fill-[#FACC15]"
+                    className="fill-red-500"
                   />
                 )}
 
@@ -157,7 +157,7 @@ export function AnnualFinanceChart({
                   x={center}
                   y={height - 8}
                   textAnchor="middle"
-                  className="text-[10px] font-black fill-slate-400  tracking-tighter"
+                  className="text-[10px] font-medium fill-spoket-darker  tracking-tighter"
                 >
                   {d.monthName}
                 </text>
@@ -174,7 +174,7 @@ export function AnnualFinanceChart({
           <span className="text-xs font-bold text-slate-700">Pemasukan</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-[#FACC15]" />
+          <span className="w-3 h-3 rounded-full bg-red-500" />
           <span className="text-xs font-bold text-slate-700">Pengeluaran</span>
         </div>
       </div>

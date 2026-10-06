@@ -201,7 +201,7 @@ export async function transferWalletToMainIncome(
   userId: string,
   sourceWalletId: string,
   amount: number,
-  mainWalletName: string = "Kas Tunai"
+  mainWalletName: string = "Kantong Utama"
 ) {
   if (amount <= 0) return { error: "Nominal pemindahan harus lebih dari 0." };
 
@@ -295,7 +295,7 @@ export async function deleteWallet(walletId: string) {
 export async function deleteWalletWithBalanceTransfer(
   userId: string,
   walletId: string,
-  mainWalletName: string = "Kas Tunai"
+  mainWalletName: string = "Kantong Utama"
 ) {
   const userIdBig = BigInt(userId);
   const walletIdBig = BigInt(walletId);
@@ -341,7 +341,7 @@ export async function deleteWalletWithBalanceTransfer(
             type: "INCOME",
             amount: balanceRemaining,
             transactionDate: new Date(),
-            notes: `Pengalihan sisa saldo dari penutupan dompet ${walletToDelete.name}`,
+            notes: `Pengalihan sisa saldo dari penutupan poket ${walletToDelete.name}`,
           },
         });
       }

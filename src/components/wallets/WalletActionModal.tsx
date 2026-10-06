@@ -10,6 +10,7 @@ export interface WalletItem {
     id: string;
     name: string;
     balance: number;
+    createdAt: string ;
 }
 
 interface WalletActionModalProps {
@@ -103,12 +104,12 @@ export function WalletActionModal({
     return createPortal(
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
             {/* Box Putih Modal */}
-            <div className="w-full max-w-sm sm:max-w-md bg-white rounded-[32px] p-6 shadow-2xl relative z-[1000] animate-in zoom-in-95 duration-200">
+            <div className="w-full max-w-sm sm:max-w-md bg-spoket-cream rounded-[32px] p-6 shadow-2xl relative z-[1000] animate-in zoom-in-95 duration-200">
 
                 {/* Header Title + Tombol Close */}
                 <div className="flex items-center justify-between pb-3">
-                    <h3 className="text-base font-black text-[#062828] tracking-tight">
-                        Pengaturan Dompet
+                    <h3 className="text-base font-semibold text-spoket-dark tracking-tight">
+                        Ubah Saldo Poket
                     </h3>
                     <button
                         type="button"
@@ -120,10 +121,9 @@ export function WalletActionModal({
                 </div>
 
                 {/* Card Saldo Gelap Hijau Tua */}
-                {/* Card Saldo Gelap Hijau Tua */}
                 <div className="my-4 p-5 rounded-2xl bg-[#032525] text-white space-y-1 shadow-inner">
-                    <span className="text-[10px] font-black text-[#FEF08A] uppercase tracking-wider block">
-                        {activeTab === "transfer" ? "ESTIMASI SISA SALDO DOMPET" : "SALDO TERSEDIA SAAT INI"}
+                    <span className="text-[10px] font-semibold text-spoket-yellowlight uppercase tracking-wider block">
+                        {activeTab === "transfer" ? " SISA SALDO POKET" : "SALDO SAAT INI"}
                     </span>
                     <h2 className="text-3xl font-black tracking-tight text-white">
                         {formatRupiah(activeTab === "transfer" ? realtimeBalanceAfterTransfer : wallet.balance)}
@@ -140,7 +140,7 @@ export function WalletActionModal({
                 </div>
 
                 {/* Tab Pilihan Menu */}
-                <div className="flex items-center gap-2 p-1.5 bg-[#F1F5F9]/80 rounded-2xl mb-4 text-xs font-black">
+                <div className="flex items-center gap-2 p-1.5 bg-spoket-gray rounded-2xl mb-4 text-xs font-bold tracking-wider">
                     <button
                         type="button"
                         onClick={() => {
@@ -148,7 +148,7 @@ export function WalletActionModal({
                             setErrorMessage("");
                         }}
                         className={`flex-1 py-2.5 rounded-xl transition text-center ${activeTab === "edit"
-                                ? "bg-white text-[#062828] border-2 border-[#062828] shadow-xs"
+                                ? "bg-spoket-yellow text-spoket-dark border-2 border-spoket-darker shadow-xs"
                                 : "text-slate-500 hover:text-slate-800"
                             }`}
                     >
@@ -161,7 +161,7 @@ export function WalletActionModal({
                             setErrorMessage("");
                         }}
                         className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition ${activeTab === "transfer"
-                                ? "bg-white text-[#062828] border-2 border-[#062828] shadow-xs"
+                                ? "bg-spoket-yellow text-spoket-dark border-2 border-spoket-darker shadow-xs"
                                 : "text-slate-500 hover:text-slate-800"
                             }`}
                     >
@@ -187,14 +187,14 @@ export function WalletActionModal({
                             <button
                                 type="button"
                                 onClick={() => setTransferAmountStr(formatNumberInput(wallet.balance))}
-                                className="text-xs font-extrabold text-teal-800 hover:underline cursor-pointer"
+                                className="text-xs font-bold text-teal-800 hover:underline cursor-pointer"
                             >
                                 Pindahkan Semua
                             </button>
                         </div>
 
                         <div className="relative flex items-center">
-                            <span className="absolute left-4 text-sm font-black text-slate-400">
+                            <span className="absolute left-4 text-sm font-extrabold text-spoket-darker">
                                 Rp
                             </span>
                             <input
@@ -210,11 +210,11 @@ export function WalletActionModal({
                                     }
                                 }}
                                 placeholder="0"
-                                className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-sm font-black text-[#062828] focus:outline-none focus:border-[#062828]"
+                                className="w-full pl-12 pr-4 py-3 bg-spoket-gray shadow-md rounded-xl text-sm font-black text-[#062828] focus:outline-none focus:border-[#062828]"
                             />
                         </div>
-                        <p className="text-[11px] text-slate-400 font-medium px-1">
-                            Nominal ini akan dipindahkan dan dicatat masuk ke saldo utama/kas tunai.
+                        <p className="text-xs text-spoket-darker font-medium px-1">
+                            Nominal ini akan dipindahkan dan dicatat masuk ke kantong utama.
                         </p>
                     </div>
                 ) : (
@@ -227,7 +227,7 @@ export function WalletActionModal({
                                 type="text"
                                 value={editName}
                                 onChange={(e) => setEditName(e.target.value)}
-                                className="w-full px-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-xs font-black text-[#062828] focus:outline-none focus:border-[#062828]"
+                                className="w-full px-4 py-3 bg-spoket-gray shadow rounded-xl text-xs font-black text-spoket-dark focus:outline-none focus:border-[#062828]"
                             />
                         </div>
                         <div>
@@ -235,7 +235,7 @@ export function WalletActionModal({
                                 Koreksi Saldo
                             </label>
                             <div className="relative flex items-center">
-                                <span className="absolute left-4 text-xs font-black text-slate-400">
+                                <span className="absolute left-4 text-xs font-black text-spoket-dark">
                                     Rp
                                 </span>
                                 <input
@@ -243,7 +243,7 @@ export function WalletActionModal({
                                     inputMode="numeric"
                                     value={editBalanceStr}
                                     onChange={(e) => setEditBalanceStr(formatNumberInput(e.target.value))}
-                                    className="w-full pl-10 pr-4 py-3 bg-[#F8FAFC] border border-slate-200 rounded-2xl text-xs font-black text-[#062828] focus:outline-none focus:border-[#062828]"
+                                    className="w-full pl-10 pr-4 py-3 bg-spoket-gray shadow rounded-xl text-xs font-black text-spoket-dark focus:outline-none focus:border-[#062828]"
                                 />
                             </div>
                         </div>
@@ -255,7 +255,7 @@ export function WalletActionModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="py-3 bg-[#F1F5F9] text-slate-600 rounded-2xl text-xs font-black hover:bg-slate-200 transition"
+                        className="py-3 bg-spoket-darker/70 text-white rounded-2xl text-xs font-semibold hover:bg-spoket-darker transition"
                     >
                         Batal
                     </button>
@@ -264,9 +264,8 @@ export function WalletActionModal({
                         type="button"
                         disabled={isLoading || (activeTab === "transfer" && numericTransfer <= 0)}
                         onClick={handleSave}
-                        className="py-3 bg-[#CBD5E1] disabled:opacity-60 text-[#062828] rounded-2xl text-xs font-black border-2 border-[#062828] flex items-center justify-center gap-1.5 transition active:scale-98"
+                        className="py-3 bg-spoket-yellow disabled:opacity-60 text-black rounded-2xl text-xs font-black border-2 border-[#062828] flex items-center justify-center gap-1.5 transition active:scale-98"
                     >
-                        <Check size={16} className="stroke-[3]" />
                         <span>{isLoading ? "Menyimpan..." : "Konfirmasi"}</span>
                     </button>
                 </div>

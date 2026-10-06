@@ -69,7 +69,7 @@ export function BudgetCarousel({ budgets }: BudgetCarouselProps) {
           <p className="text-xs font-bold text-teal-950">Belum ada amplop pos belanja.</p>
           <Link
             href="/dashboard/budgets"
-            className="inline-block mt-2 text-xs font-black bg-amber-300 border-2 border-teal-950 px-3 py-1.5 rounded-xl shadow-[2px_2px_0px_#042f2e]"
+            className="inline-block mt-2 text-xs font-black bg-spoket-yellow border-2 border-teal-950 px-3 py-1.5 rounded-xl shadow-[2px_2px_0px_#042f2e]"
           >
             Tambah Kebutuhan Bulai Ini
           </Link>

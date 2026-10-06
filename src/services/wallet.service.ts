@@ -18,6 +18,7 @@ export async function getWalletsDashboardData(userId: bigint, targetYear: number
         id: true,
         name: true,
         currentBalance: true,
+        createdAt: true,
       },
       orderBy: { createdAt: "asc" },
     }),
@@ -97,8 +98,10 @@ export async function getWalletsDashboardData(userId: bigint, targetYear: number
       id: w.id.toString(),
       name: w.name,
       balance: Number(w.currentBalance),
+       createdAt: w.createdAt ? w.createdAt.toISOString() : new Date().toISOString(),
     })),
     chartData,
     availableYears,
+   
   };
 }

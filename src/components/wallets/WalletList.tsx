@@ -10,6 +10,7 @@ import {
   Pencil,
   Trash2,
   AlertTriangle,
+  Eye, EyeOff,
   X,
 } from "lucide-react";
 import { WalletActionModal, WalletItem } from "@/src/components/wallets/WalletActionModal";
@@ -21,10 +22,13 @@ interface WalletListProps {
   initialWallets: WalletItem[];
   userId?: string;
   walletTotalIncome: number;
+  balance: number;
+  
 }
 
-export function WalletList({ initialWallets, userId = "1", walletTotalIncome }: WalletListProps) {
+export function WalletList({ initialWallets, userId = "1", walletTotalIncome, balance }: WalletListProps) {
   const [wallets, setWallets] = useState<WalletItem[]>(initialWallets);
+  const [showBalance, setShowBalance] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // State untuk modal edit
@@ -89,10 +93,11 @@ export function WalletList({ initialWallets, userId = "1", walletTotalIncome }: 
     }
   };
 
+
   return (
     <div className="space-y-3">
 
-      <div className="flex justify-between bg-amber-100/80 px-3 rounded-lg">
+      <div className="flex justify-between bg-spoket-yellow/50 shadow-md px-3 rounded-lg">
         <div className="flex space-x-1">
           <div>
             <Image
@@ -102,29 +107,42 @@ export function WalletList({ initialWallets, userId = "1", walletTotalIncome }: 
               height={60}
             />
           </div>
-          <div className="p-2">
-            <h4 className="text-black font-bold">Total Aset Saya</h4>
-            <h4 className="text-black font-medium"> {formatRupiah(walletTotalIncome)}</h4>
-          </div>
-        </div>
+          <div className="pt-2">
+            <h4 className="text-black uppercase tracking-wide text-sm font-semibold">Total Aset Saya</h4>
+            <div className="text-center space-y-1">
+              <div className="flex items-center justify-center gap-2">
+                <h2 className="text-lgtracking-tight text-black select-none">
+                  {showBalance ? formatRupiah(walletTotalIncome) : "••••••••••••"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowBalance(!showBalance)}
+                  className="text-black hover:text-black transition p-0.5"
+                  aria-label={showBalance ? "Sembunyikan saldo" : "Tampilkan saldo"}
+                >
+                  {showBalance ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
 
+              </div>
+            </div>
+          </div>
+
+        </div>
         <div className="pt-3">
           <Link
             href="/dashboard/wallets/create"
             prefetch={true}
-            className="border-2 border-teal-950 text-white bg-[#062828] px-3 py-2.5 rounded-md font-black text-xs shadow-[2px_2px_0px_#042f2e] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center gap-1.5 transition"
+            className="border-2 border-teal-950 text-white bg-[#062828] px-2 py-1 rounded-md font-semibold text-xs shadow-[2px_2px_0px_#042f2e] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center gap-1.5 transition"
           >
             <WalletIcon size={15} />
-
-            <span>Alokasi Saldo</span>
+            <span>Atur Poket</span>
           </Link>
         </div>
-
       </div>
 
       <div className="flex items-center justify-between px-1">
-        <span className="text-lg font-black  tracking-wider text-slate-800">
-          Daftar Kantong Saldo ({wallets.length})
+        <span className="text-lg font-bold  tracking-wider text-slate-800">
+          Daftar Poket ({wallets.length})
         </span>
       </div>
 
@@ -133,65 +151,75 @@ export function WalletList({ initialWallets, userId = "1", walletTotalIncome }: 
         {wallets.map((wallet) => (
           <div
             key={wallet.id}
-            className="relative flex items-center justify-between  bg-amber-100 border border-slate-100/80 shadow-md rounded-lg  hover:shadow transition"
+            className="relative flex items-center justify-between  bg-spoket-gray  rounded-xl  hover:shadow transition"
           >
             {/* Sisi Kiri: Ikon Kapsul Gelap + Teks Judul & Saldo */}
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-3.5 px-2 py-2">
               {/* Kotak Ikon Vertikal Rounded seperti Gambar */}
-              <div className="w-15 h-15 rounded-lg flex bg-[#042f2e] shadow-xl  items-center justify-center text-white  shrink-0">
+              <div className="p-2 rounded-full flex bg-[#042f2e] shadow-xl  items-center justify-center text-white  shrink-0">
                 <WalletIcon size={20} className="stroke-[2.2]" />
               </div>
-
-              {/* Teks Dompet & Nominal */}
-              <div className="flex flex-col justify-center space-y-0.5">
-                <h4 className="text-md font-black text-slate-800 tracking-tight">
+              <div className="flex flex-col justify-center -space-y-0.5">
+                <h4 className="text-sm font-bold text-slate-800 tracking-tight leading-tight">
                   {wallet.name}
                 </h4>
-                <span className="text-md   font-bold text-slate-400">
-                  {formatRupiah(wallet.balance)}
+                <span className="text-xs font-semibold text-spoket-darker leading-tight">
+                  {new Date(wallet.createdAt).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </span>
               </div>
             </div>
 
-            {/* Sisi Kanan: Titik Tiga & Dropdown Menu */}
-            <div className="relative pr-1">
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveMenuId(activeMenuId === wallet.id ? null : wallet.id)
-                }
-                className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-700 transition"
-              >
-                <MoreVertical size={18} className="stroke-[2.5]" />
-              </button>
 
-              {/* Popup Aksi Dropdown Melayang */}
-              {activeMenuId === wallet.id && (
-                <div
-                  ref={menuRef}
-                  className="absolute right-0 bottom-full mb-1 w-32 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150"
+
+            <div className="flex">
+              <div className="pt-1"> <span className="text-md   font-bold text-slate-800">
+                {formatRupiah(wallet.balance)}
+              </span> </div>
+              <div className="relative pr-1">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveMenuId(activeMenuId === wallet.id ? null : wallet.id)
+                  }
+                  className="w-8 h-8 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-700 transition"
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEdit(wallet)}
-                    className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-                  >
-                    <Pencil size={13} className="text-slate-500" />
-                    <span>Edit</span>
-                  </button>
+                  <MoreVertical size={18} className="stroke-[2.5]" />
+                </button>
 
-                  <div className="h-[1px] bg-slate-100 my-1 mx-2" />
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenDelete(wallet)}
-                    className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition"
+                {/* Popup Aksi Dropdown Melayang */}
+                {activeMenuId === wallet.id && (
+                  <div
+                    ref={menuRef}
+                    className="absolute right-0 bottom-full mb-1 w-32 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <Trash2 size={13} className="text-red-500" />
-                    <span>Hapus</span>
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(wallet)}
+                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      <Pencil size={13} className="text-slate-500" />
+                      <span>Edit</span>
+                    </button>
+
+                    <div className="h-[1px] bg-slate-100 my-1 mx-2" />
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDelete(wallet)}
+                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition"
+                    >
+                      <Trash2 size={13} className="text-red-500" />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         ))}

@@ -12,6 +12,7 @@ import {
   formatRupiah,
 } from "@/src/lib/utils";
 import { processIncomeWorkflow } from "@/src/actions/wallet";
+import { Button } from "@/src/components/ui/Button";
 
 interface ExistingWallet {
   id: string;
@@ -36,7 +37,7 @@ export function IncomeForm({
   // Input gaji awal (kosong agar user mengisi sendiri)
   const [totalIncomeStr, setTotalIncomeStr] = useState<string>("");
   const [enableBudget, setEnableBudget] = useState<boolean>(false);
-  const [enableSplit, setEnableSplit] = useState<boolean>(true);
+  const [enableSplit, setEnableSplit] = useState<boolean>(false);
 
   // Default baris split mengambil dompet yang ada selain Kantong Utama
   const initialSplits: SplitItem[] = existingWallets
@@ -171,24 +172,10 @@ export function IncomeForm({
   };
 
   return (
-    <div className="w-full space-y-4">
+
+    <div className="w-full space-y-4 flex-1 ">
       {/* Header */}
-      <div className="flex items-center gap-3 py-2">
-        <Link
-          href="/dashboard/wallets"
-          className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-800 shadow-sm border border-slate-100 hover:bg-slate-50 transition active:scale-95"
-        >
-          <ArrowLeft size={18} />
-        </Link>
-        <div>
-          <h1 className="text-lg font-black text-slate-900 tracking-tight leading-tight">
-            Tambah Pemasukan
-          </h1>
-          <p className="text-xs font-semibold text-slate-400">
-            Atur arus kas ke pos & dompet
-          </p>
-        </div>
-      </div>
+
 
       {/* Pesan Kesalahan */}
       {errorMessage && (
@@ -197,65 +184,84 @@ export function IncomeForm({
         </div>
       )}
 
+      {/* <div className="flex justify-center py-2">
+        <h4 className="text-spoket-darker">Yuk isi saldo </h4>
+      </div> */}
+
       {/* 1. Input Nominal Gaji */}
-      <div className="bg-white rounded-[26px] p-5 shadow-sm border border-slate-100/80">
-        <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block mb-2">
-          NOMINAL GAJI / UANG MASUK
+      <div className="mt-11 mb-1">
+        <span className="text-md font-semibold text-spoket-darker  tracking-wider block mb-0">
+          Masukan Nominal
         </span>
+      </div>
+
+      <div className="bg-spoket-yellow rounded-[20px] px-5 py-3 shadow-sm border-2 border-spoket-dark ">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-black text-slate-400">Rp</span>
+          <span className="text-xl font-black text-black">Rp</span>
           <input
             type="text"
             inputMode="numeric"
             value={totalIncomeStr}
             onChange={(e) => setTotalIncomeStr(formatNumberInput(e.target.value))}
             placeholder="0"
-            className="w-full text-2xl font-black text-slate-900 focus:outline-none placeholder:text-slate-300"
+            className="w-full text-2xl font-black text-slate-900 focus:outline-none placeholder:text-black"
           />
         </div>
       </div>
 
-      {/* 2. Toggle POS 50/30/20 */}
-      <div className="bg-white rounded-[26px] p-5 shadow-sm border border-slate-100/80 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-tight">
-              REKOMENDASI POS 50/30/20
-            </h3>
-            <p className="text-[11px] font-medium text-slate-400 leading-snug mt-0.5">
-              Bagi otomatis kuota Kebutuhan, Keinginan, dan Tabungan
-            </p>
-          </div>
-          <Toggle checked={enableBudget} onChange={setEnableBudget} />
-        </div>
+      <div className="flex flex-col justify-center text-center">
+        <span className="text-lg font-extrabold text-spoket-dark uppercase tracking-wider block mb-1">
+          Mau diatur ke mana uangnya?
+        </span>
+        <span className="text-sm font-medium text-spoket-dark block">
+          Pilih opsi yang ingin kamu terapkan
+        </span>
+      </div>
 
-        {enableBudget && (
-          <div className="pt-3 border-t border-slate-100 space-y-2 animate-in fade-in duration-200">
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-500">Kebutuhan Pokok (50%)</span>
-              <span className="text-[#062828] font-black">{formatRupiah(budget50)}</span>
+      <div className="bg-spoket-yellow border-2 border-spoket-dark p-3 mb-0 rounded-t-2xl">
+        <div className=" space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                Budgeting Otomatis
+              </h3>
+              <p className="text-[11px] font-medium text-spoket-darker leading-snug mt-0.5">
+                Bagi otomatis kuota Kebutuhan, Keinginan, dan Tabungan
+              </p>
             </div>
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-500">Keinginan (30%)</span>
-              <span className="text-[#062828] font-black">{formatRupiah(budget30)}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-500">Tabungan (20%)</span>
-              <span className="text-emerald-700 font-black">{formatRupiah(budget20)}</span>
-            </div>
+            <Toggle checked={enableBudget} onChange={setEnableBudget} />
           </div>
-        )}
+
+          {enableBudget && (
+            <div className="pt-3  bg-spoket-cream shadow  p-2 animate-in fade-in duration-200">
+              <p className="text-xs text-spoket-darker font-light tracking-normal leading-snug">Alokasikan uangmu pakai rumus <strong className="font-bold">50:30:20</strong> biar kebutuhan, jajan, dan tabungan tetap aman.</p>
+              <hr className="mt-2 mb-1 text-black" />
+              <div className="flex justify-between items-center text-sm font-semibold">
+                <span className="text-spoket-darker">Kebutuhan Pokok (50%)</span>
+                <span className="text-spoket-darker font-semibold">{formatRupiah(budget50)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm font-semibold">
+                <span className="text-spoket-darker">Keinginan (30%)</span>
+                <span className="text-[#062828] font-semibold">{formatRupiah(budget30)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm font-semibold">
+                <span className="text-spoket-darker">Tabungan (20%)</span>
+                <span className="text-emerald-700 font-semibold">{formatRupiah(budget20)}</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 3. Toggle Sebar ke Dompet Lain */}
-      <div className="bg-white rounded-[26px] p-5 shadow-sm border border-slate-100/80">
+      <div className="bg-spoket-cream rounded-b-2xl p-3 shadow-sm border-l-2 border-r-2 border-b-2 border-spoket-dark">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h3 className="text-xs font-black text-slate-900 uppercase tracking-tight">
-              SEBAR KE DOMPET LAIN
+              Atur Pocket Tujuan
             </h3>
-            <p className="text-[11px] font-medium text-slate-400 leading-snug mt-0.5">
-              Buat/Transfer ke Kas Tunai, GoPay, atau Bank Lain
+            <p className="text-[11px] font-medium text-spoket-darker leading-snug mt-0.5">
+              Pisahkan dana ke rekening harian, tunai, atau dompet digital.
             </p>
           </div>
           <Toggle checked={enableSplit} onChange={setEnableSplit} />
@@ -264,11 +270,11 @@ export function IncomeForm({
 
       {/* 4. Kontainer Split Dompet */}
       {enableSplit && (
-        <div className="bg-[#F8FAFC]/90 rounded-[28px] p-4 border border-slate-200/60 space-y-3 animate-in fade-in duration-200">
+        <div className="bg-spoket-yellow rounded-[28px] p-4 border border-slate-200/60 space-y-3 animate-in fade-in duration-200">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2 text-xs font-black text-slate-800">
               <SlidersHorizontal size={14} className="stroke-[2.5]" />
-              <span>Dompet Tujuan & Nominal</span>
+              <span>Poket Tujuan & Nominal</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -284,7 +290,7 @@ export function IncomeForm({
               <button
                 type="button"
                 onClick={handleAddSplit}
-                className="flex items-center gap-1 bg-[#FEF08A] border border-amber-300 text-black px-3 py-1.5 rounded-xl text-xs font-black hover:bg-amber-300 transition active:scale-95 shadow-xs"
+                className="flex items-center gap-1 bg-spoket-yellowlight border border-amber-300 text-black px-3 py-1.5 rounded-xl text-xs font-black hover:bg-yellow-300 transition active:scale-95 shadow-xs"
               >
                 <Plus size={13} className="stroke-[3]" />
                 <span>Tambah</span>
@@ -293,10 +299,25 @@ export function IncomeForm({
           </div>
 
           <div className="space-y-3">
+            <div
+              className={`p-3.5 rounded-xl flex justify-between items-center text-xs  ${isOverAllocated
+                ? "bg-red-50 border-red-200 text-red-700"
+                : "bg-spoket-dark  text-spoket-white"
+                }`}
+            >
+              <span className="font-bold">
+                {isOverAllocated ? "Kelebihan Alokasi:" : "Sisa Masuk ke Kantong Utama:"}
+              </span>
+              <span className="font-black">
+                {isOverAllocated
+                  ? `-${formatRupiah(totalSplitsNum - totalIncomeNum)}`
+                  : formatRupiah(remainingForMain)}
+              </span>
+            </div>
             {splits.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-[22px] p-4 shadow-xs border border-slate-100 space-y-3"
+                className="bg-white rounded-xl p-4 shadow-xs border border-slate-100 space-y-3"
               >
                 <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
                   <input
@@ -310,19 +331,16 @@ export function IncomeForm({
                     <button
                       type="button"
                       onClick={() => handleRemoveSplit(item.id)}
-                      className="text-slate-400 hover:text-red-500 transition p-1"
+                      className="text-spoket-dark hover:text-red-500 transition p-1"
                     >
                       <Trash2 size={15} />
                     </button>
                   )}
                 </div>
 
-                <div className="bg-[#F8FAFC] rounded-2xl p-3.5 border border-slate-100">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block mb-1">
-                    NOMINAL PINDAH
-                  </span>
+                <div className="bg-spoket-gray rounded-xl p-3.5 ">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-black text-slate-400">Rp</span>
+                    <span className="text-sm font-black text-spoket-darker">Rp</span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -337,36 +355,21 @@ export function IncomeForm({
             ))}
           </div>
 
-          {/* Indikator Balance Realtime Sisa Kantong Utama */}
-          <div
-            className={`p-3.5 rounded-2xl flex justify-between items-center text-xs border ${isOverAllocated
-                ? "bg-red-50 border-red-200 text-red-700"
-                : "bg-emerald-50 border-emerald-100 text-emerald-900"
-              }`}
-          >
-            <span className="font-bold">
-              {isOverAllocated ? "Kelebihan Alokasi:" : "Sisa Masuk ke Kantong Utama:"}
-            </span>
-            <span className="font-black">
-              {isOverAllocated
-                ? `-${formatRupiah(totalSplitsNum - totalIncomeNum)}`
-                : formatRupiah(remainingForMain)}
-            </span>
-          </div>
+
         </div>
       )}
 
       {/* Tombol Simpan */}
       <div className="pt-2">
-        <button
+        <Button
           type="button"
           disabled={isLoading || totalIncomeNum <= 0 || isOverAllocated}
           onClick={handleSubmit}
-          className="w-full py-3.5 bg-[#062828] disabled:bg-slate-300 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:opacity-95 shadow-[2px_2px_0px_#042f2e] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition"
+          className="flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:text-spoket-gray"
         >
           <Check size={16} className="stroke-[3]" />
           <span>{isLoading ? "Menyimpan Arus Kas..." : "Simpan Pemasukan"}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

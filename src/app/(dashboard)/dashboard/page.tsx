@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   const defaultWalletId = data.wallets[0]?.id || "1";
 
   return (
-    <div className="flex flex-col gap-5 p-4 bg-[#FAF8F5] min-h-screen text-teal-950 font-sans pb-28">
+    <div className="flex flex-col gap-5 p-4 bg-spoket-cream min-h-screen text-teal-950 font-sans pb-28">
 
       {/* 1. Header Saldo Bersih */}
       <section className="flex justify-between items-center pt-2">

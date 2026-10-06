@@ -1,19 +1,23 @@
 import { BottomNav } from "@/src/components/navbar/bottom";
 import { TopNav } from "@/src/components/navbar/top";
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
-const roboto = Nunito({
-  weight: ["400", "500", "700"],
-  subsets: ["latin"],
-  variable: "--font-roboto",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Expense Tracker",
   description: "Aplikasi Pelacak Pengeluaran",
 };
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export default function DashboardLayout({
   children,
@@ -21,7 +25,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`min-h-screen bg-slate-100 flex justify-center ${roboto.className}`}>
+    <div className={`min-h-screen bg-slate-100 flex justify-center ${geistSans.variable} ${geistMono.variable} `}>
       <main className="w-full max-w-md min-h-screen relative flex flex-col bg-[#062828] shadow-sm">
         {/* Top Navbar Fixed / Sticky */}
         <TopNav />
