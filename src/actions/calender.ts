@@ -1,57 +1,57 @@
 "use server";
 
 import { prisma } from "@/src/lib/prisma";
-import { auth } from "@/src/auth";
 
-export async function getCalendarMonthlyTransactions(year: number, month: number) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+export type CalendarDayTransaction = {
+  id: string;
+  notes: string;
+  amount: number;
+  type: "INCOME" | "EXPENSE" | "TRANSFER";
+  walletName: string;
+  budgetName?: string;
+};
 
-  const userId = BigInt(session.user.id);
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59);
+export async function getCalendarMonthlyTransactions(
+  year: number,
+  month: number,
+  userIdStr = "1"
+): Promise<Record<string, CalendarDayTransaction[]>> {
+  const userId = BigInt(userIdStr);
+
+  const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
-      transactionDate: { gte: startDate, lte: endDate },
+      transactionDate: {
+        gte: startDate,
+        lte: endDate,
+      },
     },
-    include: { wallet: true, budget: true },
+    include: {
+      wallet: { select: { name: true } },
+      budget: { select: { name: true } },
+    },
     orderBy: { transactionDate: "desc" },
   });
 
-  // Map transaksi per tanggal: { "2026-09-25": [tx1, tx2] }
-  const grouped: Record<string, typeof transactions> = {};
+  const resultMap: Record<string, CalendarDayTransaction[]> = {};
 
-  for (const tx of transactions) {
-    const dateKey = tx.transactionDate.toISOString().split("T")[0];
-    if (!grouped[dateKey]) grouped[dateKey] = [];
-    grouped[dateKey].push(tx);
-  }
-
-  // Serialisasi data agar aman dikirim ke Client Component
-  const serializedGrouped: Record<
-    string,
-    {
-      id: string;
-      notes: string;
-      amount: number;
-      type: "INCOME" | "EXPENSE" | "TRANSFER";
-      walletName: string;
-      budgetName?: string;
-    }[]
-  > = {};
-
-  for (const [key, items] of Object.entries(grouped)) {
-    serializedGrouped[key] = items.map((t) => ({
+  for (const t of transactions) {
+    const dateKey = new Date(t.transactionDate).toISOString().slice(0, 10);
+    if (!resultMap[dateKey]) {
+      resultMap[dateKey] = [];
+    }
+    resultMap[dateKey].push({
       id: t.id.toString(),
       notes: t.notes || (t.type === "INCOME" ? "Pemasukan" : "Pengeluaran"),
       amount: Number(t.amount),
-      type: t.type,
-      walletName: t.wallet.name,
+      type: t.type as "INCOME" | "EXPENSE" | "TRANSFER",
+      walletName: t.wallet?.name || "Dompet",
       budgetName: t.budget?.name,
-    }));
+    });
   }
 
-  return serializedGrouped;
+  return resultMap;
 }
