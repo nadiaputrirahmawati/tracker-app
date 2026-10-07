@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, ArrowLeft } from "lucide-react";
 import { prisma } from "@/src/lib/prisma";
+import { getAuthUserId } from "@/src/lib/auth-user";
 import { getBudgetsWithPeriodFilter } from "@/src/services/budget.service";
 import { getBudgetAnalyticsData } from "@/src/services/budget-analytics.service";
 import { BudgetListClient } from "@/src/components/budget/BudgetListClient";
@@ -13,25 +14,27 @@ interface PageProps {
 }
 
 export default async function BudgetListPage({ searchParams }: PageProps) {
+  // 1. Ambil session ID user login
+  const userId = await getAuthUserId();
   const resolvedParams = await searchParams;
-  const currentUserId = BigInt(1);
 
-  // Ambil data budget dengan filter tahun/bulan yang hanya ada di database
+  // 2. Ambil data budget dengan filter tahun/bulan
   const budgetData = await getBudgetsWithPeriodFilter(
-    currentUserId,
     resolvedParams.year,
     resolvedParams.month
   );
 
-  // Ambil data dompet & analitik secara paralel
+  // 3. Ambil data dompet & analitik secara paralel terikat ke user aktif
   const [rawWallets, analyticsData] = await Promise.all([
     prisma.wallet.findMany({
-      where: { userId: currentUserId },
+      where: { userId }, // ✅ Sekarang sudah terdefinisi dan aman
       select: { id: true, name: true, currentBalance: true },
       orderBy: { createdAt: "asc" },
     }),
-    getBudgetAnalyticsData(currentUserId, budgetData.targetPeriod),
+    getBudgetAnalyticsData(budgetData.targetPeriod),
   ]);
+
+  // Lanjutkan return JSX komponen seperti biasa...
 
   const wallets = rawWallets.map((w) => ({
     id: w.id.toString(),
@@ -80,7 +83,7 @@ export default async function BudgetListPage({ searchParams }: PageProps) {
       <BudgetViewTabs
         budgetListComponent={
           <BudgetListClient
-            userId={currentUserId.toString()}
+            userId={userId.toString()}
             items={budgetData.items}
             wallets={wallets}
             activeYear={budgetData.activeYear}

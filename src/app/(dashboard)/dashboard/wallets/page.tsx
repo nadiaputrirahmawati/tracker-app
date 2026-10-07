@@ -11,8 +11,7 @@ export default async function WalletsPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
 
   const currentYear = resolvedParams.year ? parseInt(resolvedParams.year, 10) : 2026;
-  const currentUserId = BigInt(1);
-  const data = await getWalletsDashboardData(currentUserId, currentYear);
+  const data = await getWalletsDashboardData( currentYear);
 
   return (
     <WalletsDashboardClient
