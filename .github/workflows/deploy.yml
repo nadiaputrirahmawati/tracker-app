@@ -1,45 +1,29 @@
-name: Deploy to Self-Hosted Server via Tailscale
+name: Deploy Locally via Self-Hosted Runner
 
 on:
   push:
     branches:
-      - main # Jalankan otomatis setiap push ke branch main
+      - main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted # Runner ini mengeksekusi langsung di dalam server kamu!
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Deploy Application
+        run: |
+          # 1. Pindah ke folder proyek tracker-app
+          cd /www/wwwroot/tracker-app
 
-      # 1. Sambungkan Runner GitHub Actions ke Tailscale
-      - name: Connect to Tailscale
-        uses: tailscale/github-action@v2
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          # 2. Tarik kode terbaru
+          git pull origin main
 
-      # 2. Deploy via SSH ke Server Lokal
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            # Arahkan ke folder project di server
-            cd ~/apps/spoket
+          # 3. Sinkronisasi dependencies & database
+          npm install
+          npx prisma generate
+          npx prisma db push
 
-            # Tarik kode terbaru dari GitHub
-            git pull origin main
+          # 4. Build Next.js
+          npm run build
 
-            # Install dependency jika ada package baru
-            npm install --production=false
-
-            # Jalankan prisma generate agar client selalu update
-            npx prisma generate
-
-            # Build Next.js
-            npm run build
-
-            # Restart aplikasi via PM2 tanpa downtime
-            pm2 reload spoket-app || pm2 restart spoket-app
+          # 5. Reload PM2
+          pm2 reload server || pm2 restart server
