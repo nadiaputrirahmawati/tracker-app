@@ -7,10 +7,13 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted # Runner ini mengeksekusi langsung di dalam server kamu!
+    runs-on: self-hosted
     steps:
       - name: Deploy Application
         run: |
+          # Tambahkan pengecualian keamanan Git untuk folder ini
+          git config --global --add safe.directory /www/wwwroot/tracker-app
+
           # 1. Pindah ke folder proyek tracker-app
           cd /www/wwwroot/tracker-app
 
