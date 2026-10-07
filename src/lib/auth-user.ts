@@ -1,16 +1,12 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/src/auth"; // sesuaikan path auth kamu
+// Sesuaikan import session auth di proyekmu:
+// Contoh jika pakai NextAuth / Auth.js:
+import { auth } from "@/src/auth"; // atau import { getServerSession } from "next-auth";
 
 export async function getAuthUserId(): Promise<bigint> {
-  let session = null;
+  const session = await auth();
 
-  try {
-    session = await auth();
-  } catch (error) {
-    // Menangkap error jika headers() dipanggil saat build/static evaluation
-    return BigInt(0);
-  }
-
+  // Jika belum login, tendang ke /login
   if (!session?.user?.id) {
     redirect("/login");
   }

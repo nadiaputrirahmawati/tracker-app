@@ -5,63 +5,89 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { getAuthUserId } from "@/src/lib/auth-user";
 
-export type BudgetTypeEnum = "EXPENSE_DAILY" | "EXPENSE" | "SAVING";
+export type BudgetTypeEnum = "EXPENSE_DAILY" | "EXPENSE_MONTHLY" | "EXPENSE" | "SAVING";
 
-interface CreateBudgetPayload {
-  userId: string;
-  name: string;
-  allocatedAmount: number;
-  type: BudgetTypeEnum;
-  icon?: string;
-  period?: string;
-}
-
-export async function createBudgetAction(payload: CreateBudgetPayload) {
-  const userId = await getAuthUserId();
-  const name = payload.name.trim();
-  const amount = Math.round(payload.allocatedAmount);
-  const period = payload.period || new Date().toISOString().slice(0, 7);
-
-  if (!name) {
-    return { error: "Nama jatah/pos belanja harus diisi." };
-  }
-
-  if (amount <= 0) {
-    return { error: "Nominal plafon harus lebih dari Rp 0." };
-  }
-
+export async function createBudgetAction(payload: any) {
   try {
+    const userId = await getAuthUserId();
+
+    console.log("--> DEBUG CREATE BUDGET:");
+    console.log("User ID dari auth:", userId.toString());
+    console.log("Payload diterima:", payload);
+
+    // 1. Cek apakah user benar-benar ada di tabel users DB
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+
+    if (!userExists) {
+      console.error(`User ID ${userId} tidak ditemukan di tabel database users!`);
+      return { 
+        error: `Akun dengan ID ${userId} belum terdaftar di database. Silakan logout lalu login kembali.` 
+      };
+    }
+
+    const name = payload?.name?.trim();
+    const rawAmount =
+      typeof payload?.allocatedAmount === "string"
+        ? payload.allocatedAmount.replace(/\D/g, "")
+        : payload?.allocatedAmount;
+    const amount = Math.round(Number(rawAmount) || 0);
+
+    // Pastikan period selalu YYYY-MM
+    let period = payload?.period || new Date().toISOString().slice(0, 7);
+    if (period.length > 7) {
+      period = period.slice(0, 7);
+    }
+
+    if (!name) {
+      return { error: "Nama pos budget harus diisi." };
+    }
+
+    if (amount <= 0) {
+      return { error: "Nominal plafon harus lebih dari Rp 0." };
+    }
+
+    // Pemetaan enum yang valid sesuai PostgreSQL
+    let budgetType = payload?.type;
+    if (budgetType === "EXPENSE" || !budgetType) {
+      budgetType = "EXPENSE_DAILY";
+    }
+
+    // 2. Cek duplikasi nama di periode yang sama untuk user ini
     const existing = await prisma.budget.findFirst({
       where: {
-        userId: userId,
+        userId,
         period,
         name: { equals: name, mode: "insensitive" },
       },
     });
 
     if (existing) {
-      return { error: `Jatah "${name}" sudah terdaftar pada periode ${period}.` };
+      return { error: `Pos "${name}" sudah terdaftar pada periode ${period}.` };
     }
 
+    // 3. Eksekusi Create
     await prisma.budget.create({
       data: {
-        userId: userId,
+        userId,
         name,
         period,
-        type: payload.type,
-        allocatedAmount: new Prisma.Decimal(amount), // Menggunakan Prisma.Decimal
-        icon: payload.icon || "wallet",
+        type: budgetType as any,
+        allocatedAmount: new Prisma.Decimal(amount),
+        icon: payload?.icon || "wallet",
       },
     });
 
     revalidatePath("/dashboard/budgets");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (err: any) {
-    console.error("Gagal simpan budget:", err);
-    return { error: err?.message || "Gagal membuat jatah belanja baru." };
+    console.error("Gagal create budget - Detail Error:", err);
+    return { error: err?.message || "Gagal membuat pos budget baru." };
   }
 }
-
 export async function updateBudgetAction(payload: {
   id: string;
   userId: string;
