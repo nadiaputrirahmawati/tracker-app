@@ -1,15 +1,14 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { getRecentTransactions } from "@/src/services/transaction.service";
 import { RecentTransactionsClient } from "@/src/components/transactions/RecentTransactionsClient";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export default async function TransactionsPage() {
-  const currentUserId = BigInt(1);
-  const groups = await getRecentTransactions(currentUserId, 30);
+  // Panggil langsung tanpa oper ID, dijamin hanya menarik data user yang sedang login!
+  const groups = await getRecentTransactions(30);
 
   return (
     <div className="min-h-screen bg-spoket-cream p-4 pb-28 space-y-4">
-      {/* Header Bar */}
       <div className="flex items-center gap-3 py-1">
         <Link
           href="/dashboard"
@@ -27,7 +26,6 @@ export default async function TransactionsPage() {
         </div>
       </div>
 
-      {/* Tampilan Riwayat Transaksi */}
       <RecentTransactionsClient initialGroups={groups} />
     </div>
   );

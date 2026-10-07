@@ -1,4 +1,5 @@
 import { prisma } from "@/src/lib/prisma";
+import { getAuthUserId } from "@/src/lib/auth-user";
 
 export interface MonthlyFinanceItem {
   monthNum: number;
@@ -7,9 +8,11 @@ export interface MonthlyFinanceItem {
   expense: number;
 }
 
-export async function getWalletsDashboardData(userId: bigint, targetYear: number) {
+export async function getWalletsDashboardData( targetYear: number) {
+  const userId = await getAuthUserId();
   const [wallets, aggregateTotal, walletTotal, monthlyFlowRaw, availableYearsRaw] = await Promise.all([
     // 1. Ambil seluruh list dompet
+    
     prisma.wallet.findMany({
       where: { userId, NOT: {
         name: { equals: "Kantong Utama", mode: "insensitive" },

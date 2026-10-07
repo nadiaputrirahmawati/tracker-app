@@ -1,4 +1,5 @@
 import { prisma } from "@/src/lib/prisma";
+import { getAuthUserId } from "@/src/lib/auth-user";
 
 export interface BudgetItemView {
   id: string;
@@ -24,12 +25,14 @@ export interface AvailablePeriodFilter {
   year: string;
   months: { value: string; label: string }[];
 }
+const userId = await getAuthUserId();
 
 export async function getAllBudgetsGroupedByMonth(
-  userId: bigint
 ): Promise<MonthBudgetGroup[]> {
   // Query 1: Ambil semua budget user diurutkan berdasarkan periode terbaru
   // Query 2: Ambil agregat pengeluaran per budgetId sekaligus (Anti N+1)
+  
+
   const [budgets, spentAggregates] = await Promise.all([
     prisma.budget.findMany({
       where: { userId },
@@ -105,7 +108,6 @@ export async function getAllBudgetsGroupedByMonth(
 }
 
 export async function getBudgetsWithPeriodFilter(
-  userId: bigint,
   selectedYear?: string,
   selectedMonth?: string
 ) {

@@ -3,6 +3,7 @@
 import { prisma } from "@/src/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
+import { getAuthUserId } from "@/src/lib/auth-user";
 
 export type BudgetTypeEnum = "EXPENSE_DAILY" | "EXPENSE" | "SAVING";
 
@@ -16,7 +17,7 @@ interface CreateBudgetPayload {
 }
 
 export async function createBudgetAction(payload: CreateBudgetPayload) {
-  const userIdBig = BigInt(payload.userId);
+  const userId = await getAuthUserId();
   const name = payload.name.trim();
   const amount = Math.round(payload.allocatedAmount);
   const period = payload.period || new Date().toISOString().slice(0, 7);
@@ -32,7 +33,7 @@ export async function createBudgetAction(payload: CreateBudgetPayload) {
   try {
     const existing = await prisma.budget.findFirst({
       where: {
-        userId: userIdBig,
+        userId: userId,
         period,
         name: { equals: name, mode: "insensitive" },
       },
@@ -44,7 +45,7 @@ export async function createBudgetAction(payload: CreateBudgetPayload) {
 
     await prisma.budget.create({
       data: {
-        userId: userIdBig,
+        userId: userId,
         name,
         period,
         type: payload.type,
@@ -69,8 +70,8 @@ export async function updateBudgetAction(payload: {
 }) {
   try {
     const budgetId = BigInt(payload.id);
-    const userId = BigInt(payload.userId);
-
+    const userId = await getAuthUserId();
+    
     await prisma.budget.update({
       where: {
         id: budgetId,

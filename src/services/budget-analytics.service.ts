@@ -1,4 +1,5 @@
 import { prisma } from "@/src/lib/prisma";
+import { getAuthUserId } from "@/src/lib/auth-user";
 
 export interface CategoryBreakdownItem {
   budgetId: string;
@@ -31,11 +32,22 @@ const PALETTE_COLORS = [
   "#8b5cf6", // purple
 ];
 
+
+
 export async function getBudgetAnalyticsData(
-  userId: bigint,
-  period: string
+  period?: string | null
 ): Promise<BudgetAnalyticsData> {
-  const [yearStr, monthStr] = period.split("-");
+  const userId = await getAuthUserId();
+
+  // Validasi dan fallback jika period undefined, null, atau format salah
+  const validPeriodPattern = /^\d{4}-\d{2}$/;
+  const fallbackPeriod = new Date().toISOString().slice(0, 7);
+  const activePeriod =
+    typeof period === "string" && validPeriodPattern.test(period)
+      ? period
+      : fallbackPeriod;
+
+  const [yearStr, monthStr] = activePeriod.split("-");
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthStr, 10);
 
@@ -46,7 +58,7 @@ export async function getBudgetAnalyticsData(
   // 1. Eksekusi paralel: Ambil jatah bulanan & transaksi teragregasi (Anti N+1)
   const [budgets, spentAggregates, allPeriods] = await Promise.all([
     prisma.budget.findMany({
-      where: { userId, period },
+      where: { userId, period: activePeriod },
       select: { id: true, name: true, icon: true, allocatedAmount: true },
     }),
     prisma.transaction.groupBy({
@@ -109,17 +121,19 @@ export async function getBudgetAnalyticsData(
     color: PALETTE_COLORS[idx % PALETTE_COLORS.length],
   }));
 
-  const availableMonths = allPeriods.map((p) => {
-    const [y, m] = p.period.split("-");
-    const d = new Date(Number(y), Number(m) - 1, 1);
-    return {
-      value: p.period,
-      label: d.toLocaleDateString("id-ID", { month: "short", year: "numeric" }),
-    };
-  });
+  const availableMonths = allPeriods
+    .filter((p) => typeof p.period === "string" && p.period.includes("-"))
+    .map((p) => {
+      const [y, m] = p.period.split("-");
+      const d = new Date(Number(y), Number(m) - 1, 1);
+      return {
+        value: p.period,
+        label: d.toLocaleDateString("id-ID", { month: "short", year: "numeric" }),
+      };
+    });
 
   return {
-    period,
+    period: activePeriod,
     totalSpent,
     dailyAverage: Math.round(totalSpent / daysInMonth),
     totalAllocated,
@@ -129,6 +143,6 @@ export async function getBudgetAnalyticsData(
     availableMonths:
       availableMonths.length > 0
         ? availableMonths
-        : [{ value: period, label: "Bulan Ini" }],
+        : [{ value: activePeriod, label: "Bulan Ini" }],
   };
 }

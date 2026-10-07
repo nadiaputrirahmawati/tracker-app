@@ -1,4 +1,7 @@
+"use server";
+
 import { prisma } from "@/src/lib/prisma";
+import { getAuthUserId } from "@/src/lib/auth-user";
 
 export interface TransactionItemView {
   id: string;
@@ -19,16 +22,19 @@ export interface TransactionGroup {
 }
 
 export async function getRecentTransactions(
-  userId: bigint,
   limit = 20,
   typeFilter?: "ALL" | "INCOME" | "EXPENSE"
 ): Promise<TransactionGroup[]> {
+  // 1. Wajib ambil user ID asli dari session (bertipe BigInt)
+  const userId = await getAuthUserId();
+
+  // 2. Susun filter where dengan userId yang terisolasi aman
   const whereClause: any = { userId };
   if (typeFilter && typeFilter !== "ALL") {
     whereClause.type = typeFilter;
   }
 
-  // 1 Kueri efisien bebas N+1
+  // 3. Kueri efisien bebas N+1 khusus milik user tersebut
   const transactions = await prisma.transaction.findMany({
     where: whereClause,
     take: limit,
@@ -80,7 +86,7 @@ export async function getRecentTransactions(
       amount: Number(t.amount),
       type: t.type as "INCOME" | "EXPENSE" | "TRANSFER",
       description: t.notes || (t.type === "INCOME" ? "Pemasukan Dana" : "Pengeluaran"),
-      categoryName: t.budget?.name || (t.type === "INCOME" ? "Pemasukan" : "Perpindahan Dana"),
+      categoryName: t.budget?.name || (t.type === "INCOME" ? "Pemasukan" : "Umum"),
       walletName: t.wallet?.name || "Kantong Utama",
       date: tDate,
       dateFormatted: tDate.toLocaleDateString("id-ID", { month: "short", day: "numeric" }),

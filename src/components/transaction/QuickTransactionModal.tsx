@@ -126,11 +126,8 @@ const [budgets, setBudgets] = useState<OptionBudget[]>([]);
         {/* Header Modal */}
         <div className="flex items-center justify-between pb-3 border-b border-[#062828]/15 mb-4">
           <div>
-            <span className="text-[10px] font-black tracking-wider uppercase text-[#57595B] block">
-              AKSES CEPAT
-            </span>
             <h2 className="text-sm font-black text-[#062828]">
-              Catat Transaksi Langsung
+              Catat Transaksi 
             </h2>
           </div>
           <button

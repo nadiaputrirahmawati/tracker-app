@@ -1,9 +1,10 @@
 "use server";
 
 import { prisma } from "@/src/lib/prisma";
+import { getAuthUserId } from "@/src/lib/auth-user";
 
-export async function getDashboardData(userIdStr = "1") {
-  const userId = BigInt(userIdStr);
+export async function getDashboardData() {
+  const userId = await getAuthUserId();
   const now = new Date();
   const currentPeriod = now.toISOString().slice(0, 7); // Format: "YYYY-MM"
 

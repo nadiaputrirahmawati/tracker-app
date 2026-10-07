@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { Settings, User, LogOut } from "lucide-react";
 import { Fredoka } from "next/font/google";
 
@@ -15,6 +16,13 @@ const fredoka = Fredoka({
 export function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogout() {
+    setLoading(true);
+    // signOut akan menghapus sesi dan otomatis mengarahkan ke halaman /login
+    await signOut({ callbackUrl: "/login" });
+  }
 
   // Tutup dropdown jika klik di luar area modal
   useEffect(() => {
@@ -79,12 +87,8 @@ export function TopNav() {
               <div className="h-[1px] bg-slate-100 my-1 mx-2" />
 
               <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  // Tambahkan handler logout (misal signOut() NextAuth) di sini
-                  window.location.href = "/login";
-                }}
+                onClick={handleLogout}
+                disabled={loading}
                 className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 transition text-left"
               >
                 <LogOut size={15} className="text-red-500" />

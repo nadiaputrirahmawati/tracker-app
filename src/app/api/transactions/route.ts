@@ -2,11 +2,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma";
 import { TransactionType } from "@prisma/client";
+import { getAuthUserId } from "@/src/lib/auth-user";
 
 export async function POST(req: Request) {
   try {
     // Sesuaikan dengan userId session/auth aktif (BigInt)
-    const userId = BigInt(1);
+    const userId = await getAuthUserId();
 
     const body = await req.json();
     const { amount, walletId, budgetId, description } = body;
