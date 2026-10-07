@@ -20,6 +20,11 @@ export interface MonthBudgetGroup {
   items: BudgetItemView[];
 }
 
+export interface AvailablePeriodFilter {
+  year: string;
+  months: { value: string; label: string }[];
+}
+
 export async function getAllBudgetsGroupedByMonth(
   userId: bigint
 ): Promise<MonthBudgetGroup[]> {
@@ -97,4 +102,121 @@ export async function getAllBudgetsGroupedByMonth(
   }
 
   return Array.from(groupMap.values());
+}
+
+export async function getBudgetsWithPeriodFilter(
+  userId: bigint,
+  selectedYear?: string,
+  selectedMonth?: string
+) {
+  // 1. Ambil semua distinct period yang tersimpan di database user
+  const distinctPeriods = await prisma.budget.findMany({
+    where: { userId },
+    select: { period: true },
+    distinct: ["period"],
+    orderBy: { period: "desc" },
+  });
+
+  // Susun struktur filter Tahun -> Bulan yang hanya ada datanya
+  const periodMap = new Map<string, Set<string>>();
+  for (const item of distinctPeriods) {
+    const [y, m] = item.period.split("-");
+    if (!periodMap.has(y)) {
+      periodMap.set(y, new Set());
+    }
+    periodMap.get(y)!.add(m);
+  }
+
+  const availableFilters: AvailablePeriodFilter[] = Array.from(periodMap.entries()).map(
+    ([year, monthsSet]) => {
+      const months = Array.from(monthsSet)
+        .sort((a, b) => Number(b) - Number(a))
+        .map((m) => {
+          const d = new Date(Number(year), Number(m) - 1, 1);
+          return {
+            value: m,
+            label: d.toLocaleDateString("id-ID", { month: "long" }),
+          };
+        });
+      return { year, months };
+    }
+  );
+
+  // Tentukan tahun & bulan aktif default dari data yang ada
+  const activeYear =
+    selectedYear && periodMap.has(selectedYear)
+      ? selectedYear
+      : availableFilters[0]?.year || new Date().getFullYear().toString();
+
+  const activeMonthsList =
+    availableFilters.find((f) => f.year === activeYear)?.months || [];
+
+  const activeMonth =
+    selectedMonth && activeMonthsList.some((m) => m.value === selectedMonth)
+      ? selectedMonth
+      : activeMonthsList[0]?.value ||
+      String(new Date().getMonth() + 1).padStart(2, "0");
+
+  const targetPeriod = `${activeYear}-${activeMonth}`;
+
+  // 2. Query budget & aggregate transaksi (Anti N+1)
+  const [budgets, spentAggregates] = await Promise.all([
+    prisma.budget.findMany({
+      where: { userId, period: targetPeriod },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.transaction.groupBy({
+      by: ["budgetId"],
+      where: {
+        userId,
+        type: "EXPENSE",
+        budgetId: { not: null },
+      },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  const spentMap = new Map<string, number>();
+  for (const s of spentAggregates) {
+    if (s.budgetId) {
+      spentMap.set(s.budgetId.toString(), Number(s._sum.amount ?? 0));
+    }
+  }
+
+  let totalAllocated = 0;
+  let totalSpent = 0;
+
+  const items: BudgetItemView[] = budgets.map((b) => {
+    const allocated = Number(b.allocatedAmount);
+    const spent = spentMap.get(b.id.toString()) || 0;
+    const remaining = Math.max(0, allocated - spent);
+    const percentage =
+      allocated > 0 ? Math.min(100, Math.round((spent / allocated) * 100)) : 0;
+
+    totalAllocated += allocated;
+    totalSpent += spent;
+
+    return {
+      id: b.id.toString(),
+      name: b.name,
+      period: b.period,
+      allocatedAmount: allocated,
+      spentAmount: spent,
+      remainingAmount: remaining,
+      percentageUsed: percentage,
+      type: b.type,
+      icon: b.icon,
+    };
+  });
+
+  return {
+    items,
+    totalAllocated,
+    totalSpent,
+    totalRemaining: Math.max(0, totalAllocated - totalSpent),
+    activeYear,
+    activeMonth,
+    targetPeriod,
+    availableFilters,
+  };
 }

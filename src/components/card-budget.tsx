@@ -4,18 +4,20 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { formatRupiah } from "@/src/lib/utils";
 
-interface Budget {
+export interface Budget {
   id: string | number;
   name: string;
   percentage: number;
   remaining: number;
   usedAmount: number;
+  allocatedAmount?: number;
+  type?: string;
+  icon?: string | null;
 }
 
 interface BudgetCarouselProps {
   budgets: Budget[];
 }
-
 export function BudgetCarousel({ budgets }: BudgetCarouselProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDown, setIsDown] = useState(false);
@@ -42,7 +44,7 @@ export function BudgetCarousel({ budgets }: BudgetCarouselProps) {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDown || !sliderRef.current) return;
     e.preventDefault();
-    
+
     const x = e.pageX - sliderRef.current.offsetLeft;
     const walk = (x - startX) * 1.5;
 
@@ -50,7 +52,7 @@ export function BudgetCarousel({ budgets }: BudgetCarouselProps) {
     if (Math.abs(x - startX) > 5) {
       setIsDragging(true);
     }
-    
+
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
 
@@ -82,56 +84,63 @@ export function BudgetCarousel({ budgets }: BudgetCarouselProps) {
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
           // Tambahkan utility inline Tailwind untuk hide scrollbar & disable scroll snap saat drag
-          className={`flex gap-3  overflow-x-auto pb-2 pt-1  px-4 cursor-grab active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-            isDown ? "scroll-auto select-none" : "snap-x scroll-smooth"
-          }`}
+          className={`flex gap-3  overflow-x-auto pb-2 pt-1  px-4 cursor-grab active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isDown ? "scroll-auto select-none" : "snap-x scroll-smooth"
+            }`}
         >
-          {budgets.map((b) => (
-            <Link
-              key={b.id.toString()}
-              href={`/dashboard/budgets/${b.id}`}
-              draggable={false} // Cegah native link drag behavior
-              onClick={(e) => {
-                if (isDragging) {
-                  e.preventDefault();
-                }
-              }}
-              className="min-w-[200px] max-w-[220px] bg-teal-950 p-3.5 rounded-2xl  snap-start flex flex-col justify-between shrink-0 shadow-lg active:shadow-none transition"
-            >
-              <div>
-                <div className="flex justify-between items-start">
-                  <span className="font-black text-sm text-white truncate max-w-[130px]">
-                    {b.name}
-                  </span>
-                  <span className="text-[9px] font-extrabold uppercase bg-amber-200 border border-teal-950 px-1.5 py-0.5 rounded-md">
-                    {b.percentage}%
-                  </span>
-                </div>
-                <p className="text-[11px] font-bold text-white mt-1">
-                  Sisa {formatRupiah(b.remaining)}
-                </p>
-              </div>
+          {budgets.map((b) => {
+            const isFull = b.percentage >= 100 || b.remaining <= 0;
 
-              <div className="mt-4 space-y-1.5">
-                <div className="w-full bg-[#FAF8F5] border border-teal-950 h-2.5 rounded-full overflow-hidden p-[1px]">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      b.percentage >= 100
-                        ? "bg-rose-500"
-                        : b.percentage > 75
-                        ? "bg-amber-500"
-                        : "bg-amber-300"
-                    }`}
-                    style={{ width: `${Math.min(b.percentage, 100)}%` }}
-                  />
+            return (
+              <Link
+                key={b.id.toString()}
+                href={`/dashboard/budgets/${b.id}`}
+                draggable={false}
+                onClick={(e) => {
+                  if (isDragging) e.preventDefault();
+                }}
+                className={`min-w-[200px] max-w-[220px] p-3.5 rounded-2xl snap-start flex flex-col justify-between shrink-0 shadow-lg transition ${isFull ? "bg-[#041c1c] border border-red-500/30" : "bg-teal-950"
+                  }`}
+              >
+                <div>
+                  <div className="flex justify-between items-start">
+                    <span className="font-black text-sm text-white truncate max-w-[125px]">
+                      {b.name}
+                    </span>
+                    <span
+                      className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border ${isFull
+                          ? "bg-rose-500 text-white border-rose-600"
+                          : "bg-amber-200 text-teal-950 border-teal-950"
+                        }`}
+                    >
+                      {isFull ? "Terpenuhi" : `${b.percentage}%`}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] font-bold text-white mt-1">
+                    {isFull ? (
+                      <span className="text-rose-400 font-extrabold">Target Terpenuhi</span>
+                    ) : (
+                      `Sisa ${formatRupiah(b.remaining)}`
+                    )}
+                  </p>
                 </div>
-                <span className="text-[10px] font-black text-white flex justify-between">
-                  <span>Terpakai:</span>
-                  <span>{formatRupiah(b.usedAmount)}</span>
-                </span>
-              </div>
-            </Link>
-          ))}
+
+                <div className="mt-4 space-y-1.5">
+                  <div className="w-full bg-[#FAF8F5] border border-teal-950 h-2.5 rounded-full overflow-hidden p-[1px]">
+                    <div
+                      className={`h-full rounded-full transition-all ${isFull ? "bg-rose-500" : b.percentage > 75 ? "bg-amber-500" : "bg-amber-300"
+                        }`}
+                      style={{ width: `${Math.min(b.percentage, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-black text-white flex justify-between">
+                    <span>Terpakai:</span>
+                    <span>{formatRupiah(b.usedAmount)}</span>
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>

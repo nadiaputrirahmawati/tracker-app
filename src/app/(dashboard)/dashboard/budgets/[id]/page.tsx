@@ -1,24 +1,21 @@
-import { prisma } from "@/src/lib/prisma";
-import { auth } from "@/src/auth";
-import { formatRupiah } from "@/src/lib/utils";
 import Link from "next/link";
-import { ArrowLeft, Plus, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, Calendar, ArrowDownRight } from "lucide-react";
+import { prisma } from "@/src/lib/prisma";
+import { formatRupiah } from "@/src/lib/utils";
 import { notFound } from "next/navigation";
 
-interface BudgetDetailPageProps {
+interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function BudgetDetailPage({ params }: BudgetDetailPageProps) {
-  const { id } = await params;
-  const session = await auth();
-  if (!session?.user?.id) return null;
+export default async function BudgetDetailPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const budgetId = BigInt(resolvedParams.id);
+  const currentUserId = BigInt(1);
 
-  const budget = await prisma.budget.findUnique({
-    where: { 
-      id: BigInt(id), 
-      userId: BigInt(session.user.id) 
-    },
+  // Ambil detail budget beserta daftar transaksi riilnya
+  const budget = await prisma.budget.findFirst({
+    where: { id: budgetId, userId: currentUserId },
     include: {
       transactions: {
         where: { type: "EXPENSE" },
@@ -28,95 +25,84 @@ export default async function BudgetDetailPage({ params }: BudgetDetailPageProps
     },
   });
 
-  if (!budget) notFound();
+  if (!budget) return notFound();
 
-  const totalUsed = budget.transactions.reduce((acc, t) => acc + Number(t.amount), 0);
-  const allocated = Number(budget.allocatedAmount);
-  const remaining = allocated - totalUsed;
-  const percentage = Math.min(Math.round((totalUsed / (allocated || 1)) * 100), 100);
+  const totalSpent = budget.transactions.reduce((acc, t) => acc + Number(t.amount), 0);
+  const remaining = Math.max(0, Number(budget.allocatedAmount) - totalSpent);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FAF8F5] text-teal-950 p-4 gap-5">
-      {/* Top Header */}
-      <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-spoket-cream p-4 pb-28 space-y-4">
+      {/* Header Bar */}
+      <div className="flex items-center gap-3 py-1">
         <Link
-          href="/dashboard"
-          className="border-2 border-teal-950 bg-white p-2 rounded-xl shadow-[2px_2px_0px_#042f2e] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+          href="/dashboard/budgets"
+          className="w-10 h-10 rounded-full bg-spoket-white border-2 border-spoket-gray flex items-center justify-center text-spoket-dark shadow-xs"
         >
           <ArrowLeft size={18} />
         </Link>
         <div>
-          <h1 className="text-lg font-black text-teal-950">{budget.name}</h1>
-          <p className="text-[11px] font-bold text-teal-900/50">Periode: {budget.period}</p>
+          <h1 className="text-lg font-black text-spoket-dark leading-tight">
+            {budget.name}
+          </h1>
+          <p className="text-[11px] font-bold text-spoket-darker">
+            Periode {budget.period}
+          </p>
         </div>
       </div>
 
-      {/* Kartu Ringkasan Neo-Brutalism */}
-      <div className="border-2 border-teal-950 bg-[#FEF08A] rounded-2xl p-5 shadow-[4px_4px_0px_#042f2e] space-y-4">
-        <div className="flex justify-between items-end">
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-teal-950">
-              Sisa Kuota Amplop
-            </span>
-            <h2 className="text-2xl font-black mt-0.5 text-teal-950">
-              {formatRupiah(remaining)}
-            </h2>
-          </div>
-          <span className="text-xs font-black bg-white border-2 border-teal-950 px-2.5 py-1 rounded-xl shadow-[2px_2px_0px_#042f2e]">
-            {percentage}% Terpakai
-          </span>
-        </div>
-
-        <div className="space-y-1">
-          <div className="w-full bg-white border-2 border-teal-950 h-3.5 rounded-full overflow-hidden p-[1px]">
-            <div
-              className={`h-full rounded-full ${percentage >= 100 ? "bg-rose-500" : "bg-teal-950"}`}
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-[11px] font-bold text-teal-900">
-            <span>Terpakai: {formatRupiah(totalUsed)}</span>
-            <span>Target: {formatRupiah(allocated)}</span>
-          </div>
+      {/* Ringkasan Saldo Budget */}
+      <div className="bg-spoket-dark text-white rounded-[28px] p-5 space-y-3 shadow-md">
+        <span className="text-[10px] font-black text-spoket-yellow uppercase tracking-wider">
+          SISA KUOTA
+        </span>
+        <h2 className="text-2xl font-black text-white">
+          {formatRupiah(remaining)}
+        </h2>
+        <div className="flex justify-between text-xs pt-1 border-t border-white/10 text-white/70">
+          <span>Terpakai: <b className="text-white">{formatRupiah(totalSpent)}</b></span>
+          <span>Plafon: <b className="text-white">{formatRupiah(Number(budget.allocatedAmount))}</b></span>
         </div>
       </div>
 
-      {/* Tombol Tambah Pengeluaran di Pos Ini */}
-      <Link
-        href={`/dashboard/transactions/expense?budgetId=${budget.id.toString()}`}
-        className="w-full py-3.5 border-2 border-teal-950 bg-teal-950 text-amber-300 rounded-2xl font-black text-xs shadow-[3px_3px_0px_#042f2e] flex items-center justify-center gap-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition"
-      >
-        <Plus size={16} className="stroke-[3]" />
-        Tambah Belanja Pada Pos Ini
-      </Link>
-
-      {/* Riwayat Mutasi Khusus Pos Ini */}
+      {/* Daftar Transaksi Belanja Riil */}
       <div className="space-y-2">
-        <h3 className="text-xs font-black uppercase tracking-wider text-teal-950">
+        <span className="text-[11px] font-black text-spoket-darker uppercase tracking-wider block px-1">
           Riwayat Belanja ({budget.transactions.length})
-        </h3>
+        </span>
 
         {budget.transactions.length === 0 ? (
-          <div className="p-6 border-2 border-dashed border-teal-950/40 rounded-2xl text-center bg-white">
-            <p className="text-xs font-bold text-teal-900/60">Belum ada pengeluaran di pos ini.</p>
+          <div className="bg-spoket-white rounded-2xl border-2 border-dashed border-spoket-gray p-8 text-center text-xs font-bold text-spoket-darker">
+            Belum ada transaksi pengeluaran pada pos ini.
           </div>
         ) : (
-          <div className="border-2 border-teal-950 bg-white rounded-2xl divide-y-2 divide-teal-950 shadow-[3px_3px_0px_#042f2e] overflow-hidden">
-            {budget.transactions.map((tx) => (
-              <div key={tx.id.toString()} className="p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 bg-rose-100 border border-teal-950 rounded-lg text-rose-700">
-                    <ArrowUpRight size={16} />
+          <div className="space-y-2">
+            {budget.transactions.map((t) => (
+              <div
+                key={t.id.toString()}
+                className="bg-spoket-white border-2 border-spoket-gray rounded-2xl p-3.5 flex items-center justify-between shadow-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                    <ArrowDownRight size={16} />
                   </div>
                   <div>
-                    <h4 className="font-black text-xs text-teal-950">{tx.notes}</h4>
-                    <p className="text-[10px] font-bold text-teal-900/50">
-                      {tx.wallet.name} • {tx.transactionDate.toISOString().split("T")[0]}
-                    </p>
+                    <h5 className="text-xs font-black text-spoket-dark">
+                      {t.notes || budget.name}
+                    </h5>
+                    <span className="text-[10px] font-semibold text-spoket-darker flex items-center gap-1">
+                      <Calendar size={11} />
+                      {new Date(t.transactionDate).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                      {t.wallet ? ` • ${t.wallet.name}` : ""}
+                    </span>
                   </div>
                 </div>
-                <span className="text-xs font-black text-rose-700">
-                  - {formatRupiah(Number(tx.amount))}
+
+                <span className="text-xs font-black text-red-600">
+                  - {formatRupiah(Number(t.amount))}
                 </span>
               </div>
             ))}

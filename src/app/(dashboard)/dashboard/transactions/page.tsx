@@ -1,78 +1,34 @@
-import { prisma } from "@/src/lib/prisma";
-import { auth } from "@/src/auth";
-import { formatRupiah } from "@/src/lib/utils";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { getRecentTransactions } from "@/src/services/transaction.service";
+import { RecentTransactionsClient } from "@/src/components/transactions/RecentTransactionsClient";
 
-
-export default async function TransactionsHistoryPage() {
-  const session = await auth();
-  if (!session?.user?.id) return null;
-
-  const transactions = await prisma.transaction.findMany({
-    where: { userId: BigInt(session.user.id) },
-    include: { wallet: true, budget: true },
-    orderBy: { transactionDate: "desc" },
-  });
+export default async function TransactionsPage() {
+  const currentUserId = BigInt(1);
+  const groups = await getRecentTransactions(currentUserId, 30);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
-      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="p-1.5 rounded-full hover:bg-slate-100 text-slate-600"
-          >
-            <ArrowLeft size={20} />
-          </Link>
-          <h1 className="text-base font-bold text-slate-800">Riwayat Mutasi</h1>
+    <div className="min-h-screen bg-spoket-cream p-4 pb-28 space-y-4">
+      {/* Header Bar */}
+      <div className="flex items-center gap-3 py-1">
+        <Link
+          href="/dashboard"
+          className="w-10 h-10 rounded-full bg-spoket-white border-2 border-spoket-dark/10 flex items-center justify-center text-spoket-dark hover:bg-spoket-gray transition active:scale-95 shadow-xs"
+        >
+          <ArrowLeft size={18} />
+        </Link>
+        <div>
+          <h1 className="text-lg font-black text-spoket-dark tracking-tight leading-tight">
+            Semua Transaksi
+          </h1>
+          <p className="text-[11px] font-bold text-spoket-darker">
+            Riwayat arus kas masuk dan keluar
+          </p>
         </div>
       </div>
 
-      <div className="p-4 space-y-3">
-        {transactions.length === 0 ? (
-          <div className="p-8 text-center text-slate-400 bg-white border border-dashed border-slate-200 rounded-2xl">
-            <p className="text-xs">Belum ada mutasi transaksi.</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 shadow-sm overflow-hidden">
-            {transactions.map((tx: any) => {
-              const isIncome = tx.type === "INCOME";
-              return (
-                <div key={tx.id.toString()} className="p-3.5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-2.5 rounded-xl ${
-                        isIncome
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-rose-50 text-rose-600"
-                      }`}
-                    >
-                      {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-xs text-slate-800">
-                        {tx.notes || (isIncome ? "Pemasukan" : "Pengeluaran")}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        {tx.wallet.name} {tx.budget ? `• ${tx.budget.name}` : ""} •{" "}
-                        {tx.transactionDate.toISOString().split("T")[0]}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`text-xs font-bold ${
-                      isIncome ? "text-emerald-600" : "text-slate-800"
-                    }`}
-                  >
-                    {isIncome ? "+" : "-"} {formatRupiah(Number(tx.amount))}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* Tampilan Riwayat Transaksi */}
+      <RecentTransactionsClient initialGroups={groups} />
     </div>
   );
 }

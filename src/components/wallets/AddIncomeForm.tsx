@@ -143,9 +143,9 @@ export function IncomeForm({
 
       const budgetsPayload = enableBudget
         ? [
-          { name: "Kebutuhan Pokok (50%)", amount: budget50, period },
-          { name: "Keinginan (30%)", amount: budget30, period },
-          { name: "Tabungan (20%)", amount: budget20, period },
+          { name: "Kebutuhan Pokok", amount: budget50, period },
+          { name: "Keinginan", amount: budget30, period },
+          { name: "Tabungan", amount: budget20, period },
         ]
         : [];
 

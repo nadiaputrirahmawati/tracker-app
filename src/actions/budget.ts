@@ -60,3 +60,32 @@ export async function createBudgetAction(payload: CreateBudgetPayload) {
     return { error: err?.message || "Gagal membuat jatah belanja baru." };
   }
 }
+
+export async function updateBudgetAction(payload: {
+  id: string;
+  userId: string;
+  name: string;
+  allocatedAmount: number;
+}) {
+  try {
+    const budgetId = BigInt(payload.id);
+    const userId = BigInt(payload.userId);
+
+    await prisma.budget.update({
+      where: {
+        id: budgetId,
+        userId: userId,
+      },
+      data: {
+        name: payload.name.trim(),
+        allocatedAmount: payload.allocatedAmount,
+      },
+    });
+
+    revalidatePath("/dashboard/budgets");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Gagal update budget:", err);
+    return { error: err.message || "Gagal memperbarui jatah belanja." };
+  }
+}
