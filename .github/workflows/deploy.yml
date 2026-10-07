@@ -11,14 +11,14 @@ jobs:
     steps:
       - name: Deploy Application
         run: |
-          # Tambahkan pengecualian keamanan Git untuk folder ini
           git config --global --add safe.directory /www/wwwroot/tracker-app
 
-          # 1. Pindah ke folder proyek tracker-app
+          # 1. Pindah ke folder proyek
           cd /www/wwwroot/tracker-app
 
-          # 2. Tarik kode terbaru
-          git pull origin main
+          # 2. Reset semua perubahan lokal yang belum di-commit dan tarik kode baru
+          git fetch origin main
+          git reset --hard origin/main
 
           # 3. Sinkronisasi dependencies & database
           npm install
