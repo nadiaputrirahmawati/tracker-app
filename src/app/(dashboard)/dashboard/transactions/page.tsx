@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getRecentTransactions } from "@/src/services/transaction.service";
 import { RecentTransactionsClient } from "@/src/components/transactions/RecentTransactionsClient";
 import Link from "next/link";

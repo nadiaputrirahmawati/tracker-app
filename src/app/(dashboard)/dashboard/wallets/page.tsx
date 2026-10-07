@@ -3,6 +3,8 @@ import { AnnualFinanceChart } from "@/src/components/wallets/IncomeBarChart";
 import { WalletList } from "@/src/components/wallets/WalletList";
 import { WalletsDashboardClient } from "@/src/components/wallets/WalletViewTabs";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   searchParams: Promise<{ year?: string }>;
 }
