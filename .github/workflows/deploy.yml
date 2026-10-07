@@ -16,7 +16,7 @@ jobs:
           # 1. Pindah ke folder proyek
           cd /www/wwwroot/tracker-app
 
-          # 2. Reset semua perubahan lokal yang belum di-commit dan tarik kode baru
+          # 2. Reset dan ambil update kode terbaru
           git fetch origin main
           git reset --hard origin/main
 
@@ -28,5 +28,5 @@ jobs:
           # 4. Build Next.js
           npm run build
 
-          # 5. Reload PM2
-          pm2 reload server || pm2 restart server
+          # 5. Reload PM2 milik user www
+          sudo -u www pm2 reload server || sudo -u www pm2 restart server
