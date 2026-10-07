@@ -20,6 +20,7 @@ export default async function WalletsPage({ searchParams }: PageProps) {
       walletListComponent={
         <WalletList
           initialWallets={data.wallets}
+          balance={data.totalBalance}
           walletTotalIncome={data.walletTotalIncome}
         />
       }
